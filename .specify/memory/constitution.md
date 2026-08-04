@@ -1,24 +1,19 @@
 <!--
 Sync Impact Report
 ===================
-Version change: [TEMPLATE] → 1.0.0 (initial ratification)
+Version change: 1.0.0 → 1.1.0
 
-Modified principles: N/A (initial adoption — all principles newly defined)
+Modified principles: N/A (no existing principle redefined)
 
-Added sections:
-- Core Principles: I. SOLID Architecture & Clean Code (NON-NEGOTIABLE)
-- Core Principles: II. Security by Design (NON-NEGOTIABLE)
-- Core Principles: III. Test-First for Booking-Critical Paths (NON-NEGOTIABLE)
-- Core Principles: IV. Data Integrity & Immutable Audit Trail
-- Core Principles: V. Accessible, On-Brand Experience
-- Core Principles: VI. Shared-Hosting-Compatible Simplicity
-- Technology Stack & Design System (with subsections: Backend & Admin,
-  Frontend & Public Site, Design Tokens & Branding, Motion & Interaction)
-- Development Workflow & Quality Gates (with subsections: Tooling &
-  Formatting, Testing Gates, Spec-Driven Process, Deployment Pipeline)
-- Governance
+Materially expanded guidance:
+- Technology Stack & Design System → Frontend & Public Site: added a
+  requirement that full screens/page layouts combine the `react-builder`
+  and `frontend-design` Claude Code skills together, not `react-builder`
+  alone, so implementation and aesthetic/UX direction are produced jointly.
 
-Removed sections: N/A (first fill of the template)
+Added sections: N/A (existing subsection expanded, not a new section)
+
+Removed sections: N/A
 
 Templates requiring updates:
 - .specify/templates/plan-template.md ✅ no changes needed (already
@@ -27,13 +22,10 @@ Templates requiring updates:
 - .specify/templates/tasks-template.md ✅ no changes needed (technology-agnostic)
 - .claude/skills/speckit-constitution/SKILL.md ✅ no stale agent-specific
   references found
-- README.md / docs/quickstart.md ⚠ not present in repository yet — create
-  when project scaffolding lands; should reference this constitution
+- README.md / docs/deployment-runbook.md ✅ checked — neither references
+  react-builder or frontend-design, no updates needed
 
-Follow-up TODOs:
-- TODO(RATIFICATION_DATE): No prior constitution existed; ratification date
-  set to the date this constitution was first authored. Confirm with
-  project stakeholders if an earlier effective date should be recorded.
+Follow-up TODOs: none
 -->
 
 # Genius Behind the Brands Annual Event Ticketing System Constitution
@@ -196,8 +188,12 @@ powers the public-facing site (event browsing, ticket cart, checkout flow).
 TanStack Router provides client-side-only routing (no SSR); routes are
 defined declaratively in the route tree, colocated with the components they
 render. Any React component work MUST use the `react-builder` Claude Code
-skill, across all project phases. Styling uses Tailwind CSS v4 with
-shadcn/ui reserved for interactive/stateful components (Dialog, Form,
+skill, across all project phases. Whenever a full screen or page layout is
+needed — not an isolated component in isolation — `react-builder` MUST be
+combined with the `frontend-design` Claude Code skill so implementation and
+aesthetic/UX direction are produced together in the same pass, rather than
+visual design being bolted on after the fact. Styling uses Tailwind CSS v4
+with shadcn/ui reserved for interactive/stateful components (Dialog, Form,
 Select, Button, Input, Calendar); layout and marketing sections are custom
 Tailwind. Typography: Playfair Display (serif, headlines/section titles),
 Barlow Condensed (headlines/badges), Barlow (body text, UI) — loaded via
@@ -286,4 +282,4 @@ the applicable principles above (the "Constitution Check" gate in
 and justified in that plan's Complexity Tracking table — undocumented
 deviation is treated as a defect, not a shortcut.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-29 | **Last Amended**: 2026-07-29
+**Version**: 1.1.0 | **Ratified**: 2026-07-29 | **Last Amended**: 2026-08-03

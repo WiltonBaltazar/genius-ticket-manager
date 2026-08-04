@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,10 +14,31 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Trust the reverse proxy this shared-hosting deployment sits behind (e.g. LiteSpeed/
+        // CDN) so X-Forwarded-For is honored for the real client IP — without this, FR-012's
+        // login throttle and FR-013/FR-014's audit ip_address would trust a spoofable header
+        // from an untrusted source instead. `*` here trusts the immediate upstream proxy only
+        // (standard for a single reverse-proxy hop); tighten to specific IPs if the hosting
+        // provider's proxy addresses are known and stable.
+        $middleware->trustProxies(at: '*', headers: SymfonyRequest::HEADER_X_FORWARDED_FOR
+            | SymfonyRequest::HEADER_X_FORWARDED_HOST
+            | SymfonyRequest::HEADER_X_FORWARDED_PORT
+            | SymfonyRequest::HEADER_X_FORWARDED_PROTO);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
-        );
+        // The scaffold's default only rendered JSON for `api/*` paths — but this app has no
+        // `/api` prefix at all (research.md §1: the auth endpoints are session-based `web`
+        // routes, not a stateless API). Removed in favor of Laravel's default content
+        // negotiation (Accept header via $request->expectsJson()), which correctly serves
+        // JSON to the React SPA's fetch calls without needing an artificial path prefix.
+
+        // A tampered or expired (>24h) verification link throws this from the `signed`
+        // middleware before EmailVerificationController::verify() ever runs — redirect to
+        // the SPA's failure state (contracts/auth-api.md §GET /email/verify) instead of
+        // Laravel's default 403 page.
+        $exceptions->render(function (InvalidSignatureException $e, Request $request) {
+            if ($request->routeIs('verification.verify')) {
+                return redirect(url('/auth/login').'?verification=failed');
+            }
+        });
     })->create();

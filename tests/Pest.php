@@ -17,11 +17,15 @@ use Tests\TestCase;
 // TicketTypeOversellTest needs two genuinely independent, uncommitted connections racing
 // the same row — a single wrapping transaction would serialize/mask the very race this test
 // exists to catch (constitution Principle III concurrency gate). Pest doesn't support binding
-// a directory's test case and then excluding one file from it, so the "rest of Feature/Schema"
-// is built explicitly here, excluding that one file, instead of a blanket `->in('Feature')`.
+// a directory's test case and then excluding one file from it, so the "rest of Feature" (both
+// Schema/ from feature 001 and Auth/ from feature 002) is built explicitly here, excluding
+// that one file, instead of a blanket `->in('Feature')`.
 $oversellTest = __DIR__.'/Feature/Schema/TicketTypeOversellTest.php';
 $otherFeatureTests = array_filter(
-    glob(__DIR__.'/Feature/Schema/*.php') ?: [],
+    array_merge(
+        glob(__DIR__.'/Feature/Schema/*.php') ?: [],
+        glob(__DIR__.'/Feature/Auth/*.php') ?: [],
+    ),
     fn (string $file): bool => $file !== $oversellTest
 );
 

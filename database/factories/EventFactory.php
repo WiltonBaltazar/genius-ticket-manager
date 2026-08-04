@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\EventStatus;
 use App\Models\Event;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -35,7 +36,7 @@ class EventFactory extends Factory
     public function twoDay(): static
     {
         return $this->state(function (array $attributes) {
-            $start = \Carbon\Carbon::parse($attributes['start_date']);
+            $start = Carbon::parse($attributes['start_date']);
 
             return [
                 'end_date' => $start->copy()->addDay()->format('Y-m-d'),

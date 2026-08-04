@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Attendee;
 use App\Models\User;
 
 return [
@@ -17,7 +18,7 @@ return [
 
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'attendees'),
     ],
 
     /*
@@ -40,7 +41,7 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'attendees',
         ],
     ],
 
@@ -71,6 +72,13 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+
+        // Left in place untouched alongside the new provider below — a future
+        // Filament/staff-auth feature will repurpose or replace it for staff auth.
+        'attendees' => [
+            'driver' => 'eloquent',
+            'model' => Attendee::class,
+        ],
     ],
 
     /*
@@ -99,6 +107,13 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+
+        'attendees' => [
+            'provider' => 'attendees',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
     ],
 
     /*
@@ -113,5 +128,20 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification Link Expiration
+    |--------------------------------------------------------------------------
+    |
+    | Minutes a signed email-verification link remains valid. FR-006 requires
+    | 24 hours (1440 minutes); Laravel's VerifyEmail notification defaults to
+    | 60 minutes if this key is absent (research.md §3).
+    |
+    */
+
+    'verification' => [
+        'expire' => 1440,
+    ],
 
 ];

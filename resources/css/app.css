@@ -4,6 +4,19 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    /* Brand palette (constitution: Design Tokens & Branding) */
+    --color-deep-purple: #3C0D5F;
+    --color-gold: #F2A801;
+    --color-gold-hover: #D88A00;
+    --color-red: #FF3502;
+    /* Brand red (#FF3502) is only 3.6:1 against white — below WCAG 2.1 AA's 4.5:1 for
+       normal text. Darkened variant for error TEXT specifically; the brand hex itself
+       stays in use for non-text accents (borders, tinted backgrounds), where the
+       lighter 3:1 non-text threshold already applies and is met. */
+    --color-red-text: #C42B00;
+
+    --font-sans: 'Barlow', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-condensed: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Playfair Display', ui-serif, Georgia, serif;
 }

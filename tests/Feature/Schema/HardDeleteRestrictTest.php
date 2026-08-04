@@ -3,6 +3,7 @@
 use App\Models\Attendee;
 use App\Models\Event;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Staff;
 use App\Models\Ticket;
 use App\Models\TicketType;
@@ -17,7 +18,7 @@ it('rejects hard-deleting an event referenced by a non-soft-deleted ticket type'
 
 it('rejects hard-deleting a ticket type referenced by a non-soft-deleted order item', function () {
     $type = TicketType::factory()->create();
-    \App\Models\OrderItem::factory()->for($type, 'ticketType')->create();
+    OrderItem::factory()->for($type, 'ticketType')->create();
 
     expect(fn () => $type->forceDelete())->toThrow(QueryException::class);
 });
