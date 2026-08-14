@@ -10,7 +10,7 @@ Derived from `spec.md` and `research.md`. This feature adds columns to two exist
 | hero_image_path | VARCHAR(255) NULL | New. Storage path to the uploaded hero image (spec.md FR-006) |
 | internal_notes | TEXT NULL | New. Staff-only; never rendered on any public/attendee-facing surface (spec.md FR-006, Key Entities) |
 | start_date | **DATETIME** (was `DATE`) | **Changed** (research.md §3) — now carries time-of-day; this is the single field the EventResource form exposes as "date/time" |
-| end_date | DATE | Unchanged type. No longer staff-editable; dehydrated to `DATE(start_date)` on every save (research.md §3) |
+| end_date | DATE | Unchanged type. Not staff-editable through this panel; dehydrated to `DATE(start_date)` by the Filament form layer only (research.md §3 — a form-level hook, not a model-level one, so feature 001's direct-model multi-day event capability is untouched) |
 | status | VARCHAR(20) | Unchanged column; **backing enum's cases change** (research.md §2) from `draft/published/sold_out/completed/cancelled` to `draft/published/closed/archived`. All four transitions are unrestricted (spec.md Clarification #4) |
 
 **New index**: `UNIQUE (slug)`.
@@ -37,13 +37,13 @@ No changes to `id`, `name`, `description`, `venue` (used as spec.md's "location"
 No changes to `id`, `event_id`, `name`, `description`, `price` (kept `DECIMAL(10,2)`, research.md §4), `total_quantity`, `available_quantity`, `version`, `created_at`/`updated_at`, `deleted_at`, the existing `available_quantity >= 0 AND available_quantity <= total_quantity` CHECK, or the FK to `events`.
 
 **Validation rules**:
-- `total_quantity`: editable on create and on edit **only while** `available_quantity === total_quantity` (i.e., no tickets sold yet). Once `available_quantity < total_quantity`, the field is presented read-only (spec.md FR-013). This is a Filament form-state rule, not a new DB constraint — the existing CHECK already guarantees `available_quantity` never exceeds `total_quantity` at the database layer.
+- `total_quantity`: editable on create and on edit **only while** `available_quantity === total_quantity` (i.e., no tickets sold yet). Once `available_quantity < total_quantity`, the field is presented read-only (spec.md FR-013). This is a Filament form-state rule, not a new DB constraint — the existing CHECK already guarantees `available_quantity` never exceeds `total_quantity` at the database layer. The check is re-evaluated live against the record's current database state at both form-render and save time (not a one-time flag captured at first sale) — see the State Transitions note below.
 - `available_quantity`: always read-only in the admin UI (spec.md FR-012). On create, defaults to the submitted `total_quantity` (no sales exist yet for a brand-new ticket type) — set server-side, never staff-entered.
 - `price`: entered/displayed as a plain MZN decimal amount; no unit conversion (research.md §4).
 - `sales_end_date`, when set, should not precede `sales_start_date` — a form-level validation rule (mirrors the Edge Cases entry in spec.md); not DB-enforced, consistent with `sales_start_date`/`sales_end_date` both being nullable/independent.
 - No delete action is exposed for this resource, for any role (research.md §6).
 
-**State transitions**: none beyond the `total_quantity`-lock behavior above, which is a one-way gate (once any ticket sells, the field never becomes editable again for that ticket type, even if a refund later brings `available_quantity` back up — refund/inventory-restoration logic is out of this feature's scope per spec.md).
+**State transitions**: none beyond the `total_quantity`-lock behavior above. Per spec.md FR-013 (resolved 2026-08-14), this is a live condition, not a one-way gate: if `available_quantity` is ever restored to equal `total_quantity` (e.g., by a future refund/cancellation feature — no code in this feature does so), the field becomes editable again on the next form load/save, since the check always re-reads current state rather than a flag captured at first sale. This scenario is unobservable within this feature's own scope (nothing here ever increases `available_quantity`); it matters only once a future refund workflow exists.
 
 ## `staff` (no schema change — new application-level enum cast only)
 

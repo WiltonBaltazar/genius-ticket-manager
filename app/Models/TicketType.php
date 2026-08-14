@@ -21,6 +21,8 @@ class TicketType extends Model
         'total_quantity',
         'available_quantity',
         'version',
+        'sales_start_date',
+        'sales_end_date',
     ];
 
     protected function casts(): array
@@ -30,6 +32,8 @@ class TicketType extends Model
             'total_quantity' => 'integer',
             'available_quantity' => 'integer',
             'version' => 'integer',
+            'sales_start_date' => 'datetime',
+            'sales_end_date' => 'datetime',
         ];
     }
 

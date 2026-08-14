@@ -6,6 +6,7 @@ use App\Enums\EventStatus;
 use App\Models\Event;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Event>
@@ -21,13 +22,15 @@ class EventFactory extends Factory
      */
     public function definition(): array
     {
+        $name = fake()->sentence(3);
         $startDate = fake()->dateTimeBetween('+1 week', '+6 months');
 
         return [
-            'name' => fake()->sentence(3),
+            'name' => $name,
+            'slug' => Str::slug($name).'-'.Str::lower(Str::random(6)),
             'description' => fake()->paragraph(),
             'venue' => fake()->address(),
-            'start_date' => $startDate->format('Y-m-d'),
+            'start_date' => $startDate->format('Y-m-d H:i:s'),
             'end_date' => $startDate->format('Y-m-d'),
             'status' => EventStatus::Published,
         ];

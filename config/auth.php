@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Attendee;
+use App\Models\Staff;
 use App\Models\User;
 
 return [
@@ -43,6 +44,11 @@ return [
             'driver' => 'session',
             'provider' => 'attendees',
         ],
+
+        'staff' => [
+            'driver' => 'session',
+            'provider' => 'staff',
+        ],
     ],
 
     /*
@@ -73,11 +79,14 @@ return [
         //     'table' => 'users',
         // ],
 
-        // Left in place untouched alongside the new provider below — a future
-        // Filament/staff-auth feature will repurpose or replace it for staff auth.
         'attendees' => [
             'driver' => 'eloquent',
             'model' => Attendee::class,
+        ],
+
+        'staff' => [
+            'driver' => 'eloquent',
+            'model' => Staff::class,
         ],
     ],
 

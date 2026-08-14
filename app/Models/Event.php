@@ -15,17 +15,20 @@ class Event extends Model
 
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'venue',
+        'hero_image_path',
         'start_date',
         'end_date',
         'status',
+        'internal_notes',
     ];
 
     protected function casts(): array
     {
         return [
-            'start_date' => 'date',
+            'start_date' => 'datetime',
             'end_date' => 'date',
             'status' => EventStatus::class,
         ];

@@ -21,6 +21,7 @@ class TicketTypeFactory extends Factory
     public function definition(): array
     {
         $totalQuantity = fake()->numberBetween(10, 500);
+        $salesStartDate = fake()->dateTimeBetween('-1 month', 'now');
 
         return [
             'event_id' => Event::factory(),
@@ -30,6 +31,8 @@ class TicketTypeFactory extends Factory
             'total_quantity' => $totalQuantity,
             'available_quantity' => $totalQuantity,
             'version' => 0,
+            'sales_start_date' => $salesStartDate,
+            'sales_end_date' => (clone $salesStartDate)->modify('+3 months'),
         ];
     }
 

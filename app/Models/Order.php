@@ -56,6 +56,17 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    /**
+     * orders has no event_id column (research.md §5) — an order's event only exists
+     * transitively through order_items.ticket_type_id → ticket_types.event_id.
+     * Reads the already-loaded orderItems.ticketType.event relation; eager-load that
+     * path rather than calling this before orderItems is loaded.
+     */
+    public function event(): ?Event
+    {
+        return $this->orderItems->first()?->ticketType?->event;
+    }
+
     public function paymentEvents(): HasMany
     {
         return $this->hasMany(PaymentEvent::class);

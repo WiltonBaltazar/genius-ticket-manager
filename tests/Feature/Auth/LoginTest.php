@@ -107,8 +107,8 @@ it('throttles the 6th rapid login attempt from one IP to 429 with a Retry-After 
         ->assertHeader('Retry-After');
 });
 
-it('resolves the web guard to the attendees provider, independent of any staff guard', function () {
+it('resolves the web guard to the attendees provider, independent of the staff guard', function () {
     expect(Auth::guard('web')->getProvider())->toBeInstanceOf(EloquentUserProvider::class);
     expect(config('auth.guards.web.provider'))->toBe('attendees');
-    expect(config('auth.guards.staff'))->toBeNull();
+    expect(config('auth.guards.staff.provider'))->toBe('staff');
 });
