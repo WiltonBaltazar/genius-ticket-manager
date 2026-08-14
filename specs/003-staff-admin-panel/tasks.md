@@ -145,11 +145,11 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 
 ### Tests for User Story 5 ⚠️ write first, must fail
 
-- [ ] T031 [P] [US5] Pest feature test `tests/Feature/Filament/DashboardStatsWidgetTest.php` — the widget's total orders, paid orders, revenue (MZN, summed from paid orders only), and pending orders figures match direct `Order` aggregate queries (FR-019, AS1, AS2, SC-005); the widget does not render at all for `gate_operator` (research.md §8, SC-006)
+- [X] T031 [P] [US5] Pest feature test `tests/Feature/Filament/DashboardStatsWidgetTest.php` — the widget's total orders, paid orders, revenue (MZN, summed from paid orders only), and pending orders figures match direct `Order` aggregate queries (FR-019, AS1, AS2, SC-005); the widget does not render at all for `gate_operator` (research.md §8, SC-006)
 
 ### Implementation for User Story 5
 
-- [ ] T032 [US5] Create `app/Filament/Widgets/OrderStatsOverview.php` extending `StatsOverviewWidget` — four stat cards (total/paid/revenue/pending) computed from `Order` aggregates; `canView()` true only for `super_admin`, `event_manager`, `support` (FR-019, research.md §8; depends on T018)
+- [X] T032 [US5] Create `app/Filament/Widgets/OrderStatsOverview.php` extending `StatsOverviewWidget` — four stat cards (total/paid/revenue/pending) computed from `Order` aggregates; `canView()` true only for `super_admin`, `event_manager`, `support` (FR-019, research.md §8; depends on T018)
 
 **Checkpoint**: All five user stories independently functional.
 
