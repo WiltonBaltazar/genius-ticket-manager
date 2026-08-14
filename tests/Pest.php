@@ -25,6 +25,7 @@ $otherFeatureTests = array_filter(
     array_merge(
         glob(__DIR__.'/Feature/Schema/*.php') ?: [],
         glob(__DIR__.'/Feature/Auth/*.php') ?: [],
+        glob(__DIR__.'/Feature/Filament/*.php') ?: [],
     ),
     fn (string $file): bool => $file !== $oversellTest
 );
