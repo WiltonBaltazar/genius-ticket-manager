@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredAttendeeController;
+use App\Http\Controllers\Checkout\EventCheckoutController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,6 +16,11 @@ Route::get('/', function () {
 Route::get('/auth/{any?}', function () {
     return view('app');
 })->where('any', '.*');
+
+// Dual-purpose: serves the SPA shell for a browser navigation, JSON for the
+// app's own fetch() call to the same URL (see EventCheckoutController).
+Route::get('/events/{event:slug}', [EventCheckoutController::class, 'show'])
+    ->name('events.show');
 
 Route::post('/register', [RegisteredAttendeeController::class, 'store'])
     ->middleware('throttle:register')

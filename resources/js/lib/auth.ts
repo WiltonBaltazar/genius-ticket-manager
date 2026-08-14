@@ -69,3 +69,34 @@ export async function authFetch<T = unknown>(
 export function postJson<T = unknown>(path: string, data: unknown): Promise<T> {
     return authFetch<T>(path, { method: "POST", body: JSON.stringify(data) });
 }
+
+export function getJson<T = unknown>(path: string): Promise<T> {
+    return authFetch<T>(path, { method: "GET" });
+}
+
+/** Same CSRF/session handling as authFetch, but for a multipart/form-data body (file uploads) — no Content-Type override, the browser sets the multipart boundary. */
+export async function postFormData<T = unknown>(
+    path: string,
+    data: FormData,
+): Promise<T> {
+    const response = await fetch(path, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            Accept: "application/json",
+            "X-CSRF-TOKEN": csrfToken(),
+        },
+        body: data,
+    });
+
+    const isJson = response.headers
+        .get("content-type")
+        ?.includes("application/json");
+    const body = isJson ? await response.json() : {};
+
+    if (!response.ok) {
+        throw new AuthApiError(response.status, body);
+    }
+
+    return body as T;
+}

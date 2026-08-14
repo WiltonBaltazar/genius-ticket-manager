@@ -6,6 +6,8 @@ Session-based (Laravel `web` middleware group — cookies + CSRF), same-origin, 
 
 Maps to: FR-001, User Story 1. Public — no auth. Route-model-bound by `slug`, not `id` (nicer public URLs; the admin panel already established `slug` as the canonical public identifier for an event, feature 003).
 
+**Dual-purpose** (discovered during implementation): this single URL is both the human-navigable page and the JSON data endpoint, mirroring the existing `/auth/{any?}` SPA-shell pattern. A request that doesn't expect JSON (a real browser navigation) gets the React shell (`view('app')`), which then calls this same URL again via `fetch()` — that second request, with an `Accept: application/json` header, gets the JSON body below. There is no separate `/api/...` path.
+
 **Responses**:
 - `200 OK` — Body:
   ```json
@@ -45,6 +47,8 @@ Maps to: FR-002 through FR-006, User Story 2. Public — no auth required; if an
 ## GET /orders/{order}
 
 Maps to: FR-010, FR-014, FR-015, FR-018, User Stories 3–5. Public — no auth; the order's UUID is the access key (research.md §8). Never enumerable (no endpoint lists orders by attendee/email for an unauthenticated caller).
+
+**Dual-purpose**, same pattern as `GET /events/{event:slug}` above: a non-JSON-expecting request (the emailed link opened in a browser) gets the SPA shell; the app's own `fetch()` to the same URL gets the JSON body below.
 
 **Responses**:
 - `200 OK` — Body:

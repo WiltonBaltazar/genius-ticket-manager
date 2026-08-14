@@ -56,15 +56,15 @@ Single Laravel 13 monolith (per plan.md): backend under `app/{Actions,Http,Notif
 
 ### Tests for User Story 1 ⚠️ write first, must fail
 
-- [ ] T006 [P] [US1] Pest feature test `tests/Feature/Checkout/EventAvailabilityTest.php` — `GET /events/{slug}` returns the event plus each ticket type's `price`/`available_quantity` (FR-001, AS1); a ticket type with 0 remaining is still included, not omitted (contracts/checkout-api.md); a `draft`/`closed`/`archived` event returns 404, not the event's data
+- [X] T006 [P] [US1] Pest feature test `tests/Feature/Checkout/EventAvailabilityTest.php` — `GET /events/{slug}` returns the event plus each ticket type's `price`/`available_quantity` (FR-001, AS1); a ticket type with 0 remaining is still included, not omitted (contracts/checkout-api.md); a `draft`/`closed`/`archived` event returns 404, not the event's data
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Create `app/Http/Controllers/Checkout/EventCheckoutController.php` — `show(Event $event)`, 404 unless `status = Published`, eager-loads non-soft-deleted `ticketTypes` with currently-open sales windows (contracts/checkout-api.md)
-- [ ] T008 [US1] Register `GET /events/{event:slug}` in `routes/web.php`, route-model-bound by `slug` (depends on T007)
-- [ ] T009 [P] [US1] Create `resources/js/lib/cart.ts` — client-side cart state (context + `localStorage` persistence, research.md §9), add/remove/update-quantity operations that refuse to exceed a ticket type's known `available_quantity`
-- [ ] T010 [P] [US1] Create `resources/js/components/checkout/TicketTypeSelector.tsx` — renders price/availability per ticket type, disables adding beyond `available_quantity`, shows a sold-out state for `available_quantity = 0` (AS2, AS3)
-- [ ] T011 [US1] Create `resources/js/routes/events/$slug.tsx` — event page fetching `GET /events/{slug}`, wiring `TicketTypeSelector` to the cart from T009 (depends on T008, T009, T010)
+- [X] T007 [US1] Create `app/Http/Controllers/Checkout/EventCheckoutController.php` — `show(Event $event)`, 404 unless `status = Published`, eager-loads non-soft-deleted `ticketTypes` with currently-open sales windows (contracts/checkout-api.md). Discovered during implementation: this route is dual-purpose (SPA shell for a browser navigation vs JSON for the app's own `fetch()`, branched on `$request->expectsJson()`) — the same URL can't be page-only or API-only the way the plan first assumed, since there's no `/api` prefix in this project's routing convention. `GET /orders/{order}` (T025) needs the same treatment.
+- [X] T008 [US1] Register `GET /events/{event:slug}` in `routes/web.php`, route-model-bound by `slug` (depends on T007)
+- [X] T009 [P] [US1] Create `resources/js/lib/cart.ts` — client-side cart state (context + `localStorage` persistence, research.md §9), add/remove/update-quantity operations that refuse to exceed a ticket type's known `available_quantity`
+- [X] T010 [P] [US1] Create `resources/js/components/checkout/TicketTypeSelector.tsx` — renders price/availability per ticket type, disables adding beyond `available_quantity`, shows a sold-out state for `available_quantity = 0` (AS2, AS3)
+- [X] T011 [US1] Create `resources/js/routes/events/$slug.tsx` — event page fetching `GET /events/{slug}`, wiring `TicketTypeSelector` to the cart from T009 (depends on T008, T009, T010)
 
 **Checkpoint**: User Story 1 is fully functional and independently testable — a visitor can browse an event and build a valid cart.
 
