@@ -3,97 +3,126 @@
 use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\TicketType;
-use Illuminate\Testing\TestResponse;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /*
- * Assertions here look up a specific event by id in the response rather than
- * asserting on the full list's count/order, because the two oversell
- * concurrency tests (tests/Pest.php) commit real Event rows outside any
- * transaction and never clean them up — the events table isn't guaranteed
- * empty at the start of these tests.
+ * The landing page shows a single event (the most recently created active
+ * one), not a list — so "latest" needs deterministic created_at control in
+ * these tests. Two oversell concurrency tests (tests/Pest.php) commit real
+ * Event rows outside any transaction and never clean them up, so the events
+ * table isn't guaranteed empty; setting created_at far in the future makes a
+ * test event unambiguously "the latest" regardless of that leftover data.
  */
-function eventIdsIn(TestResponse $response): array
+function withCreatedAt(Event $event, Carbon $timestamp): Event
 {
-    return collect($response->json('events'))->pluck('id')->all();
+    DB::table('events')->where('id', $event->id)->update(['created_at' => $timestamp]);
+
+    return $event->fresh();
 }
 
-it('lists a published upcoming event with a starting price from its cheapest on-sale ticket type', function () {
-    $event = Event::factory()->create([
-        'status' => EventStatus::Published,
-        'start_date' => now()->addWeek(),
-        'end_date' => now()->addWeek()->toDateString(),
-    ]);
-    TicketType::factory()->for($event)->create(['price' => 300]);
-    TicketType::factory()->for($event)->create(['price' => 150]);
+it('returns the active event with its on-sale ticket types', function () {
+    $event = withCreatedAt(
+        Event::factory()->create([
+            'status' => EventStatus::Published,
+            'start_date' => now()->addWeek(),
+            'end_date' => now()->addWeek()->toDateString(),
+        ]),
+        now()->addYear(),
+    );
+    $ticketType = TicketType::factory()->for($event)->create(['price' => 250]);
 
     $response = $this->getJson('/');
 
     $response->assertOk();
-    expect(eventIdsIn($response))->toContain($event->id);
-    $entry = collect($response->json('events'))->firstWhere('id', $event->id);
-    expect($entry['starting_price'])->toBe('150.00');
+    $response->assertJsonPath('event.id', $event->id);
+    $response->assertJsonFragment([
+        'id' => $ticketType->id,
+        'price' => '250.00',
+    ]);
 });
 
-it('orders two published upcoming events soonest first', function () {
-    $later = Event::factory()->create([
-        'status' => EventStatus::Published,
-        'start_date' => now()->addMonth(),
-        'end_date' => now()->addMonth()->toDateString(),
-    ]);
-    $sooner = Event::factory()->create([
-        'status' => EventStatus::Published,
-        'start_date' => now()->addWeek(),
-        'end_date' => now()->addWeek()->toDateString(),
-    ]);
+it('returns the most recently created active event when more than one exists', function () {
+    $older = withCreatedAt(
+        Event::factory()->create([
+            'status' => EventStatus::Published,
+            'start_date' => now()->addWeek(),
+            'end_date' => now()->addWeek()->toDateString(),
+        ]),
+        now()->subDay(),
+    );
+    $newer = withCreatedAt(
+        Event::factory()->create([
+            'status' => EventStatus::Published,
+            'start_date' => now()->addMonth(),
+            'end_date' => now()->addMonth()->toDateString(),
+        ]),
+        now()->addYear(),
+    );
 
-    $ids = eventIdsIn($this->getJson('/'));
+    $response = $this->getJson('/');
 
-    expect(array_search($sooner->id, $ids, true))
-        ->toBeLessThan(array_search($later->id, $ids, true));
+    $response->assertOk();
+    $response->assertJsonPath('event.id', $newer->id);
+    expect($response->json('event.id'))->not->toBe($older->id);
 });
 
-it('excludes draft, closed, and archived events', function () {
-    $excludedIds = [];
+it('excludes a draft, closed, or archived event even if it is the most recently created', function () {
     foreach ([EventStatus::Draft, EventStatus::Closed, EventStatus::Archived] as $status) {
-        $excludedIds[] = Event::factory()->create(['status' => $status])->id;
+        $event = withCreatedAt(Event::factory()->create(['status' => $status]), now()->addYear());
+
+        $response = $this->getJson('/');
+
+        $response->assertOk();
+        expect($response->json('event.id'))->not->toBe($event->id);
     }
-
-    $ids = eventIdsIn($this->getJson('/'));
-
-    expect(array_intersect($excludedIds, $ids))->toBeEmpty();
 });
 
-it('excludes an event that has already finished', function () {
-    $event = Event::factory()->create([
-        'status' => EventStatus::Published,
-        'start_date' => now()->subMonth(),
-        'end_date' => now()->subMonth()->toDateString(),
-    ]);
+it('excludes an event that has already finished even if it is the most recently created', function () {
+    $event = withCreatedAt(
+        Event::factory()->create([
+            'status' => EventStatus::Published,
+            'start_date' => now()->subMonth(),
+            'end_date' => now()->subMonth()->toDateString(),
+        ]),
+        now()->addYear(),
+    );
 
-    expect(eventIdsIn($this->getJson('/')))->not->toContain($event->id);
+    $response = $this->getJson('/');
+
+    $response->assertOk();
+    expect($response->json('event.id'))->not->toBe($event->id);
 });
 
 it('includes a multi-day event that already started but has not ended', function () {
-    $event = Event::factory()->create([
-        'status' => EventStatus::Published,
-        'start_date' => now()->subDay(),
-        'end_date' => now()->addDay()->toDateString(),
-    ]);
+    $event = withCreatedAt(
+        Event::factory()->create([
+            'status' => EventStatus::Published,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay()->toDateString(),
+        ]),
+        now()->addYear(),
+    );
 
-    expect(eventIdsIn($this->getJson('/')))->toContain($event->id);
+    $response = $this->getJson('/');
+
+    $response->assertOk();
+    $response->assertJsonPath('event.id', $event->id);
 });
 
-it('reports a null starting price when no ticket type is currently on sale', function () {
-    $event = Event::factory()->create(['status' => EventStatus::Published]);
-    TicketType::factory()->for($event)->create([
+it('omits a ticket type that is not yet on sale', function () {
+    $event = withCreatedAt(Event::factory()->create(['status' => EventStatus::Published]), now()->addYear());
+    $notYetOnSale = TicketType::factory()->for($event)->create([
         'sales_start_date' => now()->addWeek(),
         'sales_end_date' => now()->addMonth(),
     ]);
 
     $response = $this->getJson('/');
 
-    $entry = collect($response->json('events'))->firstWhere('id', $event->id);
-    expect($entry['starting_price'])->toBeNull();
+    $response->assertOk();
+    $response->assertJsonPath('event.id', $event->id);
+    $ticketTypeIds = collect($response->json('ticket_types'))->pluck('id');
+    expect($ticketTypeIds)->not->toContain($notYetOnSale->id);
 });
 
 it('serves the SPA shell for a plain browser request', function () {

@@ -81,9 +81,10 @@ function EventPage() {
                 </p>
             )}
             {data.event.description && (
-                <p className="mt-4 font-sans text-base leading-relaxed text-deep-purple/70">
-                    {data.event.description}
-                </p>
+                <div
+                    className="mt-4 font-sans text-base leading-relaxed text-deep-purple/70"
+                    dangerouslySetInnerHTML={{ __html: data.event.description }}
+                />
             )}
 
             <TicketTypeSelector
