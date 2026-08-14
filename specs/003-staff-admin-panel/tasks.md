@@ -236,6 +236,20 @@ After Foundational: Developer A takes US2 (Events), Developer B takes US3 (Ticke
 
 ---
 
+## Post-Implementation Changes
+
+### 2026-08-14: Multi-day events
+
+All 37 tasks above were complete and the feature closed out when the requirement changed: events must be able to span more than one day (previously single-day-only, per Clarification #1 and research.md §3's original decision). Implemented as a small follow-up, not a full re-run of Setup–Polish:
+
+- New migration `2026_08_14_170142_allow_multi_day_events.php` drops the `events_duration_check` CHECK constraint's one-day upper bound, leaving only `end_date >= DATE(start_date)`.
+- `EventForm` gains an optional `end_date` `DatePicker` ("End Date", `afterOrEqual('start_date')`, helper text explaining the blank-defaults-to-single-day behavior).
+- `CreateEvent`/`EditEvent`'s `mutateFormDataBeforeCreate()`/`mutateFormDataBeforeSave()` changed from unconditionally overwriting `end_date` to only defaulting it when blank (`??=`).
+- `EventInfolist` gains an End Date entry.
+- `tests/Feature/Schema/EventDurationBoundsTest.php`'s "rejects an end_date more than one day after start_date" test flipped to "allows" (the behavior it was asserting no longer exists); `EventResourcePolicyTest.php` gained 3 new cases (blank-defaults-to-single-day, explicit multi-day end date, end-before-start still rejected on the form).
+- `spec.md`, `data-model.md`, `research.md` updated in place to document the new behavior (see spec.md's "Post-implementation change (2026-08-14)" entry under Clarifications, and research.md §3).
+- Full suite re-run: 123/123 passing (was 120; +3 new tests, 0 regressions).
+
 ## Notes
 
 - [P] tasks = different files, no ordering dependency

@@ -9,19 +9,20 @@ Derived from `spec.md` and `research.md`. This feature adds columns to two exist
 | slug | VARCHAR(255) NOT NULL | New. Unique per spec.md FR-007. Staff-entered, not auto-generated from `name` (spec.md's form lists `slug` as its own field) |
 | hero_image_path | VARCHAR(255) NULL | New. Storage path to the uploaded hero image (spec.md FR-006) |
 | internal_notes | TEXT NULL | New. Staff-only; never rendered on any public/attendee-facing surface (spec.md FR-006, Key Entities) |
-| start_date | **DATETIME** (was `DATE`) | **Changed** (research.md §3) — now carries time-of-day; this is the single field the EventResource form exposes as "date/time" |
-| end_date | DATE | Unchanged type. Not staff-editable through this panel; dehydrated to `DATE(start_date)` by the Filament form layer only (research.md §3 — a form-level hook, not a model-level one, so feature 001's direct-model multi-day event capability is untouched) |
+| start_date | **DATETIME** (was `DATE`) | **Changed** (research.md §3) — now carries time-of-day; this is the "Start Date & Time" field the EventResource form exposes |
+| end_date | DATE | Unchanged type. **Staff-editable as of the 2026-08-14 post-implementation change** (research.md §3) — optional on the form, defaulting to `start_date`'s calendar date when left blank so single-day events need no extra input; events may span more than one day when staff set a later end date |
 | status | VARCHAR(20) | Unchanged column; **backing enum's cases change** (research.md §2) from `draft/published/sold_out/completed/cancelled` to `draft/published/closed/archived`. All four transitions are unrestricted (spec.md Clarification #4) |
 
 **New index**: `UNIQUE (slug)`.
 
-**Constraint change**: the feature-001 CHECK `events_duration_check` (`end_date >= start_date AND end_date <= DATE_ADD(start_date, INTERVAL 1 DAY)`) is replaced with an equivalent that compares against the date portion of the now-`DATETIME` `start_date`: `end_date >= DATE(start_date) AND end_date <= DATE_ADD(DATE(start_date), INTERVAL 1 DAY)`.
+**Constraint change**: the feature-001 CHECK `events_duration_check` (`end_date >= start_date AND end_date <= DATE_ADD(start_date, INTERVAL 1 DAY)`) was first replaced with an equivalent comparing against the date portion of the now-`DATETIME` `start_date` (`end_date >= DATE(start_date) AND end_date <= DATE_ADD(DATE(start_date), INTERVAL 1 DAY)`), then **further relaxed on 2026-08-14** to drop the one-day upper bound entirely: `end_date >= DATE(start_date)`. Events may now span any number of days.
 
 No changes to `id`, `name`, `description`, `venue` (used as spec.md's "location" field — no rename, per spec.md's Assumptions), `created_at`/`updated_at`, `deleted_at`, or the existing `(status, start_date)`/`(end_date)` indexes.
 
 **Validation rules**:
 - `slug`: required, unique among non-soft-deleted events (spec.md FR-007) — reuses the same soft-delete-aware "active" uniqueness pattern already established for `attendees.email_active`/`staff.email_active` (feature 001/002) if a collision needs to ignore soft-deleted rows; otherwise a plain unique index is sufficient since there is no attendee-visible "re-registration" concept for event slugs.
 - `start_date`: required, date + time.
+- `end_date`: optional on the form (defaults to `start_date`'s calendar date); when provided, must be on or after `start_date`'s calendar date (enforced both by the Filament form's `afterOrEqual` rule and the DB CHECK).
 - `status`: one of the four `EventStatus` cases; every staff member permitted to edit an event may set it to any of the four, in any order (spec.md Clarification #4 — no state-machine validation).
 - `hero_image_path`: optional; standard web image formats within a reasonable size limit (spec.md Assumptions).
 

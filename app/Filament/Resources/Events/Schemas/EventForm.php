@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Events\Schemas;
 
 use App\Enums\EventStatus;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
@@ -28,9 +29,13 @@ class EventForm
                     ->label('Location')
                     ->maxLength(255),
                 DateTimePicker::make('start_date')
-                    ->label('Date & Time')
+                    ->label('Start Date & Time')
                     ->required()
                     ->seconds(false),
+                DatePicker::make('end_date')
+                    ->label('End Date')
+                    ->afterOrEqual('start_date')
+                    ->helperText('Leave blank for a single-day event.'),
                 FileUpload::make('hero_image_path')
                     ->label('Hero Image')
                     ->image()

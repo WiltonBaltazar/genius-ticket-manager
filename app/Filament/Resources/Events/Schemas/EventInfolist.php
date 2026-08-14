@@ -16,7 +16,8 @@ class EventInfolist
                 TextEntry::make('name'),
                 TextEntry::make('slug'),
                 TextEntry::make('venue')->label('Location'),
-                TextEntry::make('start_date')->label('Date & Time')->dateTime(),
+                TextEntry::make('start_date')->label('Start Date & Time')->dateTime(),
+                TextEntry::make('end_date')->label('End Date')->date(),
                 ImageEntry::make('hero_image_path')->label('Hero Image'),
                 TextEntry::make('description')->html(),
                 TextEntry::make('status')

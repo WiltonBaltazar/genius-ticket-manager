@@ -15,9 +15,10 @@ it('allows a two-day event (end_date one day after start_date)', function () {
     expect($event->fresh()->end_date->toDateString())->toBe('2027-03-11');
 });
 
-it('rejects an end_date more than one day after start_date', function () {
-    expect(fn () => Event::factory()->create(['start_date' => '2027-03-10', 'end_date' => '2027-03-13']))
-        ->toThrow(QueryException::class);
+it('allows an end_date more than one day after start_date (multi-day events)', function () {
+    $event = Event::factory()->create(['start_date' => '2027-03-10', 'end_date' => '2027-03-13']);
+
+    expect($event->fresh()->end_date->toDateString())->toBe('2027-03-13');
 });
 
 it('rejects an end_date before start_date', function () {

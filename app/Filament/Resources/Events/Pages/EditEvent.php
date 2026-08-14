@@ -21,13 +21,13 @@ class EditEvent extends EditRecord
     }
 
     /**
-     * Filament-form-scoped only (not a model-level hook — see Event model /
-     * research.md §3 for why): end_date is internal bookkeeping derived from
-     * start_date, never staff-editable, and never exposed on this form.
+     * end_date is staff-editable (multi-day events) but optional on the form;
+     * defaults to a single-day event (same calendar date as start_date) when
+     * left blank, since the DB column is NOT NULL.
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        $data['end_date'] = Carbon::parse($data['start_date'])->startOfDay();
+        $data['end_date'] ??= Carbon::parse($data['start_date'])->startOfDay();
 
         return $data;
     }

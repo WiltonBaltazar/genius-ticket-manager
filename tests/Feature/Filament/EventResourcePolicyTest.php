@@ -49,6 +49,60 @@ it('saves an event with no hero image and no description', function () {
         ->description->toBeNull();
 });
 
+it('defaults end_date to a single day when left blank', function () {
+    $staff = Staff::factory()->eventManager()->create();
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(CreateEvent::class)
+        ->fillForm([
+            'name' => 'Single Day Event',
+            'slug' => 'single-day-event',
+            'venue' => 'TBD',
+            'start_date' => '2027-05-10 09:00:00',
+            'status' => 'draft',
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Event::where('slug', 'single-day-event')->first()->end_date->toDateString())->toBe('2027-05-10');
+});
+
+it('lets event_manager set a multi-day event end date beyond the old one-day limit', function () {
+    $staff = Staff::factory()->eventManager()->create();
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(CreateEvent::class)
+        ->fillForm([
+            'name' => 'Three Day Conference',
+            'slug' => 'three-day-conference',
+            'venue' => 'TBD',
+            'start_date' => '2027-05-10 09:00:00',
+            'end_date' => '2027-05-12',
+            'status' => 'draft',
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Event::where('slug', 'three-day-conference')->first()->end_date->toDateString())->toBe('2027-05-12');
+});
+
+it('rejects an end date before the start date on the form', function () {
+    $staff = Staff::factory()->eventManager()->create();
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(CreateEvent::class)
+        ->fillForm([
+            'name' => 'Backwards Event',
+            'slug' => 'backwards-event',
+            'venue' => 'TBD',
+            'start_date' => '2027-05-10 09:00:00',
+            'end_date' => '2027-05-09',
+            'status' => 'draft',
+        ])
+        ->call('create')
+        ->assertHasFormErrors(['end_date']);
+});
+
 it('rejects a duplicate slug', function () {
     $staff = Staff::factory()->eventManager()->create();
     Event::factory()->create(['slug' => 'taken-slug']);
