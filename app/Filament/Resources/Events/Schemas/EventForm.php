@@ -39,6 +39,7 @@ class EventForm
                 FileUpload::make('hero_image_path')
                     ->label('Hero Image')
                     ->image()
+                    ->disk('public')
                     ->directory('events/hero-images')
                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                     ->maxSize(5120),

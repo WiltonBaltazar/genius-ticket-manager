@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\Staff;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 it('lets event_manager create an event with all fields, and it appears in the events list', function () {
@@ -47,6 +48,32 @@ it('saves an event with no hero image and no description', function () {
     expect(Event::where('slug', 'bare-bones-event')->first())
         ->hero_image_path->toBeNull()
         ->description->toBeNull();
+});
+
+it('stores a hero image on the public disk so it is reachable from the public event page', function () {
+    // Regression: FileUpload had no explicit ->disk('public'), so it silently
+    // fell back to the app's default disk (`local`, which Laravel 11+ roots at
+    // storage/app/private) — the file saved successfully but 404'd on the
+    // public site, since asset('storage/...') only serves the public disk.
+    Storage::fake('public');
+    $staff = Staff::factory()->eventManager()->create();
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(CreateEvent::class)
+        ->fillForm([
+            'name' => 'Hero Image Event',
+            'slug' => 'hero-image-event',
+            'venue' => 'Somewhere',
+            'start_date' => now()->addMonth()->format('Y-m-d H:i:s'),
+            'status' => 'draft',
+            'hero_image_path' => UploadedFile::fake()->image('hero.jpg'),
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    $event = Event::where('slug', 'hero-image-event')->firstOrFail();
+
+    Storage::disk('public')->assertExists($event->hero_image_path);
 });
 
 it('defaults end_date to a single day when left blank', function () {

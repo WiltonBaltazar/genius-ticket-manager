@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { postFormData } from "../../lib/auth";
 
 type OrderSummary = {
@@ -26,8 +26,11 @@ export function PaymentMethodStep({
     onUploaded: () => void;
 }) {
     const [method, setMethod] = useState<"whatsapp" | "bank">("whatsapp");
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [justUploaded, setJustUploaded] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const statusUrl = `${window.location.origin}/orders/${order.id}`;
     const message = `Hi! I'd like to complete payment for order ${order.id} (MZN ${order.total_amount}). ${statusUrl}`;
@@ -35,17 +38,25 @@ export function PaymentMethodStep({
         ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
         : null;
 
-    async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+        setSelectedFile(e.target.files?.[0] ?? null);
+        setUploadError(null);
+        setJustUploaded(false);
+    }
+
+    async function handleSubmit() {
+        if (!selectedFile) return;
 
         setUploading(true);
         setUploadError(null);
 
         try {
             const form = new FormData();
-            form.append("file", file);
+            form.append("file", selectedFile);
             await postFormData(`/orders/${order.id}/proof-of-payment`, form);
+            setJustUploaded(true);
+            setSelectedFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = "";
             onUploaded();
         } catch {
             setUploadError("Couldn't upload that file. Please try again.");
@@ -152,13 +163,31 @@ export function PaymentMethodStep({
                 </label>
                 <input
                     id="proof-of-payment"
+                    ref={fileInputRef}
                     type="file"
                     accept="image/jpeg,image/png,application/pdf"
                     disabled={uploading}
                     onChange={handleFileChange}
                     className="mt-2 block w-full font-sans text-sm text-deep-purple"
                 />
-                {order.proof_of_payment_uploaded && (
+                <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={!selectedFile || uploading}
+                    className="mt-3 rounded-md bg-deep-purple px-4 py-2 font-condensed text-sm font-semibold uppercase tracking-wide text-white hover:bg-gold hover:text-deep-purple disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                    {uploading ? "Uploading…" : "Submit proof of payment"}
+                </button>
+                {justUploaded && (
+                    <p
+                        role="status"
+                        className="mt-2 font-sans text-xs font-medium text-green-700"
+                    >
+                        Proof of payment uploaded — a staff member will
+                        review it shortly.
+                    </p>
+                )}
+                {!justUploaded && order.proof_of_payment_uploaded && (
                     <p className="mt-1 font-sans text-xs text-deep-purple/50">
                         Received — a staff member will review it shortly.
                     </p>
