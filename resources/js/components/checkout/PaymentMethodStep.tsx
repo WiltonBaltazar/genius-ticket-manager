@@ -15,12 +15,13 @@ export function PaymentMethodStep({
     onUploaded,
 }: {
     order: OrderSummary;
-    whatsappNumber: string;
+    whatsappNumber: string | null;
     bankDetails: {
-        accountName: string;
-        accountNumber: string;
-        bankName: string;
-        branch: string;
+        accountName: string | null;
+        accountNumber: string | null;
+        bankName: string | null;
+        branch: string | null;
+        instructions: string | null;
     };
     onUploaded: () => void;
 }) {
@@ -30,7 +31,9 @@ export function PaymentMethodStep({
 
     const statusUrl = `${window.location.origin}/orders/${order.id}`;
     const message = `Hi! I'd like to complete payment for order ${order.id} (MZN ${order.total_amount}). ${statusUrl}`;
-    const waLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    const waLink = whatsappNumber
+        ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+        : null;
 
     async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -86,14 +89,21 @@ export function PaymentMethodStep({
                         Message us on WhatsApp to arrange payment — your order
                         reference and total are pre-filled.
                     </p>
-                    <a
-                        href={waLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-4 block w-full rounded-md bg-deep-purple px-4 py-3 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white hover:bg-gold hover:text-deep-purple"
-                    >
-                        Open WhatsApp
-                    </a>
+                    {waLink ? (
+                        <a
+                            href={waLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-4 block w-full rounded-md bg-deep-purple px-4 py-3 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white hover:bg-gold hover:text-deep-purple"
+                        >
+                            Open WhatsApp
+                        </a>
+                    ) : (
+                        <p className="mt-4 font-sans text-sm text-red-text">
+                            WhatsApp checkout isn't configured yet — please
+                            use bank transfer instead.
+                        </p>
+                    )}
                 </div>
             ) : (
                 <div className="rounded-md border border-deep-purple/10 p-4 font-sans text-sm text-deep-purple">
@@ -123,6 +133,11 @@ export function PaymentMethodStep({
                         <span className="font-semibold">Amount:</span> MZN{" "}
                         {order.total_amount}
                     </p>
+                    {bankDetails.instructions && (
+                        <p className="mt-3 whitespace-pre-line text-deep-purple/70">
+                            {bankDetails.instructions}
+                        </p>
+                    )}
                 </div>
             )}
 

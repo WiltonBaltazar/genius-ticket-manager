@@ -61,3 +61,12 @@ entry, pending orders never expire and reserved inventory is never released back
 **Verification**: after deploying, confirm the entry is active (`crontab -l` for the deploy
 user) and that `php artisan schedule:list` shows `orders:expire-pending` scheduled every five
 minutes.
+
+## Payment settings (WhatsApp number, bank details)
+
+The `WHATSAPP_ORGANIZER_NUMBER`/`BANK_TRANSFER_*` `.env` values only bootstrap the
+`payment_settings` table's single row, via the `create_payment_settings_table` migration —
+after the first `php artisan migrate`, editing `.env` has no further effect. All later changes
+(swapping the WhatsApp number, updating bank details, editing the bank-transfer proof-of-payment
+instructions shown to attendees) are made at `/admin/payment-settings`, restricted to the
+`super_admin` role (`App\Filament\Pages\PaymentSettings::canAccess()`).

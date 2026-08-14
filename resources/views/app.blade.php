@@ -9,18 +9,22 @@
 </head>
 <body>
     <div id="root"></div>
-    {{-- 004-attendee-checkout: static payment config the payment step needs
-         client-side (WhatsApp number, bank details) — Js::from() safely
-         escapes this for inline embedding (Laravel's recommended pattern for
-         passing server data into JS, guards against </script> breakout). --}}
+    {{-- 004-attendee-checkout: admin-configurable payment settings the payment
+         step needs client-side (WhatsApp number, bank details) — editable via
+         the "Payment Settings" admin page, not .env, so no deploy is needed to
+         change them. Js::from() safely escapes this for inline embedding
+         (Laravel's recommended pattern for passing server data into JS,
+         guards against </script> breakout). --}}
+    @php($paymentSettings = \App\Models\PaymentSetting::current())
     <script>
         window.__CHECKOUT_CONFIG__ = {{ Illuminate\Support\Js::from([
-            'whatsappNumber' => config('services.whatsapp.number'),
+            'whatsappNumber' => $paymentSettings->whatsapp_number,
             'bankTransfer' => [
-                'accountName' => config('services.bank_transfer.account_name'),
-                'accountNumber' => config('services.bank_transfer.account_number'),
-                'bankName' => config('services.bank_transfer.bank_name'),
-                'branch' => config('services.bank_transfer.branch'),
+                'accountName' => $paymentSettings->bank_account_name,
+                'accountNumber' => $paymentSettings->bank_account_number,
+                'bankName' => $paymentSettings->bank_name,
+                'branch' => $paymentSettings->bank_branch,
+                'instructions' => $paymentSettings->bank_transfer_instructions,
             ],
         ]) }};
     </script>
