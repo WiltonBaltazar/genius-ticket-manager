@@ -67,6 +67,7 @@ class OrderController extends Controller
             'items' => $request->input('items'),
             'name' => $attendee ? null : $request->input('name'),
             'email' => $attendee ? null : $request->input('email'),
+            'phone' => $attendee ? null : $request->input('phone'),
             'attendee' => $attendee,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),

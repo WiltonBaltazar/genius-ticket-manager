@@ -16,10 +16,11 @@ function checkoutPayload(Event $event, TicketType $ticketType, array $overrides 
         ],
         'name' => 'Jane Attendee',
         'email' => 'jane@example.test',
+        'phone' => '+258840000000',
     ], $overrides);
 }
 
-it('attaches a logged-in attendee\'s order to their account without needing name/email in the request', function () {
+it('attaches a logged-in attendee\'s order to their account without needing name/email/phone in the request', function () {
     $attendee = Attendee::factory()->create();
     $event = Event::factory()->create();
     $ticketType = TicketType::factory()->for($event)->create(['total_quantity' => 10, 'available_quantity' => 10]);
@@ -27,11 +28,36 @@ it('attaches a logged-in attendee\'s order to their account without needing name
     $response = $this->actingAs($attendee, 'web')->postJson('/checkout', checkoutPayload($event, $ticketType, [
         'name' => null,
         'email' => null,
+        'phone' => null,
     ]));
 
     $response->assertCreated();
     $order = Order::find($response->json('order.id'));
     expect($order->attendee_id)->toBe($attendee->id);
+});
+
+it('requires a phone number for guest checkout', function () {
+    $event = Event::factory()->create();
+    $ticketType = TicketType::factory()->for($event)->create(['total_quantity' => 10, 'available_quantity' => 10]);
+
+    $response = $this->postJson('/checkout', checkoutPayload($event, $ticketType, ['phone' => null]));
+
+    $response->assertUnprocessable();
+    $response->assertJsonValidationErrors('phone');
+});
+
+it('stores the phone number on the created guest attendee', function () {
+    $event = Event::factory()->create();
+    $ticketType = TicketType::factory()->for($event)->create(['total_quantity' => 10, 'available_quantity' => 10]);
+
+    $response = $this->postJson('/checkout', checkoutPayload($event, $ticketType, [
+        'email' => 'phone-guest@example.test',
+        'phone' => '+258849999999',
+    ]));
+
+    $response->assertCreated();
+    expect(Attendee::where('email', 'phone-guest@example.test')->first()->phone)
+        ->toBe('+258849999999');
 });
 
 it('creates a guest attendee with no password or verification when checking out unauthenticated', function () {

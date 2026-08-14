@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class SubmitOrderAction
 {
     /**
-     * @param  array{transaction_hash: string, event_id: string, items: array<int, array{ticket_type_id: string, quantity: int}>, name?: ?string, email?: ?string, attendee?: ?Attendee, ip_address?: ?string, user_agent?: ?string}  $data
+     * @param  array{transaction_hash: string, event_id: string, items: array<int, array{ticket_type_id: string, quantity: int}>, name?: ?string, email?: ?string, phone?: ?string, attendee?: ?Attendee, ip_address?: ?string, user_agent?: ?string}  $data
      */
     public function handle(array $data): SubmitOrderResult
     {
@@ -24,7 +24,7 @@ class SubmitOrderAction
 
         $attendee = $data['attendee'] ?? Attendee::firstOrCreate(
             ['email' => $data['email']],
-            ['name' => $data['name']],
+            ['name' => $data['name'], 'phone' => $data['phone'] ?? null],
         );
 
         $order = null;

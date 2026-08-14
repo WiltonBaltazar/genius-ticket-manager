@@ -15,6 +15,7 @@ it('returns the original order on a duplicate transaction_hash instead of creati
         'items' => [['ticket_type_id' => $ticketType->id, 'quantity' => 2]],
         'name' => 'Jane Attendee',
         'email' => 'jane@example.test',
+        'phone' => '+258840000000',
     ];
 
     $first = $this->postJson('/checkout', $payload);

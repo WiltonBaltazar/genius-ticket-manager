@@ -33,6 +33,7 @@ class SubmitOrderRequest extends FormRequest
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             'name' => [Rule::requiredIf(! $authenticated), 'nullable', 'string', 'max:255'],
             'email' => [Rule::requiredIf(! $authenticated), 'nullable', 'email:rfc'],
+            'phone' => [Rule::requiredIf(! $authenticated), 'nullable', 'string', 'max:30'],
         ];
     }
 }

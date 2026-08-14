@@ -21,6 +21,7 @@ export function CheckoutDetailsForm({
     const [session, setSession] = useState<SessionPayload["attendee"]>();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [formError, setFormError] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
@@ -52,6 +53,7 @@ export function CheckoutDetailsForm({
                 })),
                 name: loggedIn ? null : name,
                 email: loggedIn ? null : email,
+                phone: loggedIn ? null : phone,
             });
 
             cart.clear();
@@ -136,6 +138,16 @@ export function CheckoutDetailsForm({
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         error={errors.email}
+                    />
+                    <FormField
+                        label="Phone number"
+                        name="phone"
+                        type="tel"
+                        autoComplete="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        error={errors.phone}
                     />
                 </div>
             )}
