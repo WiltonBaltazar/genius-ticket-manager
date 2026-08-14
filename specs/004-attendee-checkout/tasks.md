@@ -171,11 +171,11 @@ Single Laravel 13 monolith (per plan.md): backend under `app/{Actions,Http,Notif
 
 **Purpose**: Whole-feature validation and consistency with the rest of the codebase
 
-- [ ] T045 Run the full Pest suite (`php artisan test`) — all new checkout tests pass AND all features 001–003 tests still pass
-- [ ] T046 [P] Execute `specs/004-attendee-checkout/quickstart.md` steps 1–9 end-to-end and record results in `specs/004-attendee-checkout/quickstart-results.md`
-- [ ] T047 [P] Accessibility spot-check on the new public pages (event/cart, checkout, order-status) against WCAG 2.1 AA, and a manual mobile-viewport pass confirming parity with desktop (SC-006), recording findings in `quickstart-results.md`
-- [ ] T048 Run Pint (`vendor/bin/pint`) on all new/modified PHP files, per constitution Principle I's formatting gate
-- [ ] T049 Add the `* * * * * php artisan schedule:run` cron entry to `docs/deployment-runbook.md` (research.md §3 — this feature is the first to need Laravel's scheduler; not yet documented there)
+- [X] T045 Run the full Pest suite (`php artisan test`) — all new checkout tests pass AND all features 001–003 tests still pass. 163/163 passing, 500 assertions.
+- [X] T046 [P] Execute `specs/004-attendee-checkout/quickstart.md` steps 1–9 end-to-end and record results in `specs/004-attendee-checkout/quickstart-results.md`. Live browser walkthrough found and fixed two real bugs not caught by any test: dev-DB migration drift (an already-applied migration was edited in place, so the local DB's tracker never re-ran it — `payment_method` column was missing) and a Filament-reserved `$action` closure-parameter collision on the `ConfirmPayment` action (`ViewOrder.php`). Both fixed; the second also got a new regression test (`OrderConfirmPaymentPolicyTest`'s `Livewire::test(...)->callAction('confirmPayment')` case) since the existing test only checked button visibility, never invoked it.
+- [X] T047 [P] Accessibility spot-check on the new public pages (event/cart, checkout, order-status) against WCAG 2.1 AA, and a manual mobile-viewport pass confirming parity with desktop (SC-006), recording findings in `quickstart-results.md`. Found and fixed two real gaps in `PaymentMethodStep.tsx`: the WhatsApp/bank-transfer toggle buttons exposed no selected state to assistive tech (added `aria-pressed`/`role="group"`), and the proof-of-payment file input's `<label>` wasn't programmatically associated with its `<input>` (added `htmlFor`/`id`).
+- [X] T048 Run Pint (`vendor/bin/pint`) on all new/modified PHP files, per constitution Principle I's formatting gate. Clean, no changes needed.
+- [X] T049 Add the `* * * * * php artisan schedule:run` cron entry to `docs/deployment-runbook.md` (research.md §3 — this feature is the first to need Laravel's scheduler; not yet documented there)
 
 ---
 

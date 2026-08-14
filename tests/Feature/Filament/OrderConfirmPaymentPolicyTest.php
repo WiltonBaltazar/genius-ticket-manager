@@ -1,7 +1,11 @@
 <?php
 
+use App\Enums\OrderStatus;
+use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Staff;
+use Livewire\Livewire;
 
 it('allows confirmPayment for the same roles already permitted to view orders', function () {
     $order = Order::factory()->pending()->create();
@@ -46,6 +50,23 @@ it('shows an uploaded proof-of-payment file on a pending order before confirming
     $response = $this->actingAs($staff, 'staff')->get("/admin/orders/{$order->id}");
 
     $response->assertOk();
+});
+
+it('actually confirms payment when the ConfirmPayment action is invoked through the admin panel', function () {
+    // Distinct from the "shows the action" test above (T036), which only checked
+    // visibility — this clicks it, which is what caught a real bug the visibility
+    // check alone couldn't: the action closure's injected ConfirmOrderPaymentAction
+    // parameter was named $action, colliding with Filament's own reserved
+    // convention of binding that parameter name to the Action component itself.
+    $staff = Staff::factory()->eventManager()->create();
+    $order = Order::factory()->pending()->create();
+    OrderItem::factory()->create(['order_id' => $order->id]);
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(ViewOrder::class, ['record' => $order->getKey()])
+        ->callAction('confirmPayment');
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Paid);
 });
 
 it('renders an expired order in both the orders list and detail view without error', function () {

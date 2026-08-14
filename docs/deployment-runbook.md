@@ -42,3 +42,22 @@ setups don't always expose static proxy IPs in advance.
 Set `SESSION_SECURE_COOKIE=true` in every non-local environment's `.env` once the site is
 served over HTTPS (FR-026, constitution Principle II). `http_only` and `same_site=lax` are
 already Laravel's secure-by-default config values and need no override.
+
+## Scheduler cron entry (attendee-checkout feature)
+
+Pending-order expiry (`orders:expire-pending`, FR-012/FR-017) runs via Laravel's scheduler
+(`bootstrap/app.php`'s `->withSchedule()`), not a queue worker — per `research.md` §3, this
+avoids depending on a persistent queue process that shared hosting may not guarantee is
+running. The scheduler itself still needs exactly one cron entry per environment to tick:
+
+```cron
+* * * * * cd /path/to/genius-ticket-manager && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Replace `/path/to/genius-ticket-manager` with the deployed application root. Without this
+entry, pending orders never expire and reserved inventory is never released back to
+`available_quantity`.
+
+**Verification**: after deploying, confirm the entry is active (`crontab -l` for the deploy
+user) and that `php artisan schedule:list` shows `orders:expire-pending` scheduled every five
+minutes.

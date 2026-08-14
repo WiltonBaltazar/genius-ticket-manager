@@ -26,8 +26,14 @@ class ViewOrder extends ViewRecord
                 ->requiresConfirmation()
                 ->visible(fn () => $this->record->status === OrderStatus::Pending
                     && auth('staff')->user()?->can('confirmPayment', $this->record))
-                ->action(function (ConfirmOrderPaymentAction $action) {
-                    $action->handle($this->record, auth('staff')->user());
+                ->action(function (ConfirmOrderPaymentAction $confirmOrderPaymentAction) {
+                    // Not named $action: Filament reserves that parameter name in an
+                    // action closure to inject the Filament\Actions\Action component
+                    // itself, regardless of the declared type hint — a real collision
+                    // discovered only by clicking the button, not by any test, since
+                    // the unit-level ConfirmOrderPaymentAction tests call the action
+                    // class directly rather than through this closure.
+                    $confirmOrderPaymentAction->handle($this->record, auth('staff')->user());
 
                     Notification::make()
                         ->title('Payment confirmed')

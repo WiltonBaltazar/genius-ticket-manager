@@ -53,9 +53,10 @@ export function PaymentMethodStep({
 
     return (
         <div className="space-y-6">
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="group" aria-label="Payment method">
                 <button
                     type="button"
+                    aria-pressed={method === "whatsapp"}
                     onClick={() => setMethod("whatsapp")}
                     className={`flex-1 rounded-md border px-4 py-2 font-condensed text-sm font-semibold uppercase tracking-wide ${
                         method === "whatsapp"
@@ -67,6 +68,7 @@ export function PaymentMethodStep({
                 </button>
                 <button
                     type="button"
+                    aria-pressed={method === "bank"}
                     onClick={() => setMethod("bank")}
                     className={`flex-1 rounded-md border px-4 py-2 font-condensed text-sm font-semibold uppercase tracking-wide ${
                         method === "bank"
@@ -125,12 +127,16 @@ export function PaymentMethodStep({
             )}
 
             <div>
-                <label className="font-condensed text-xs font-semibold uppercase tracking-wide text-deep-purple">
+                <label
+                    htmlFor="proof-of-payment"
+                    className="font-condensed text-xs font-semibold uppercase tracking-wide text-deep-purple"
+                >
                     {order.proof_of_payment_uploaded
                         ? "Replace proof of payment"
                         : "Upload proof of payment (optional)"}
                 </label>
                 <input
+                    id="proof-of-payment"
                     type="file"
                     accept="image/jpeg,image/png,application/pdf"
                     disabled={uploading}
@@ -143,7 +149,7 @@ export function PaymentMethodStep({
                     </p>
                 )}
                 {uploadError && (
-                    <p className="mt-1 font-sans text-xs text-red-text">
+                    <p role="alert" className="mt-1 font-sans text-xs text-red-text">
                         {uploadError}
                     </p>
                 )}
