@@ -35,6 +35,7 @@ class TicketPdfController extends Controller
             'ticket' => $ticket,
             'attendeeName' => $attendeeName,
             'qrCodeBase64' => base64_encode($qrCode->getString()),
+            'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
         ])->download("ticket-{$ticket->id}.pdf");
     }
 }

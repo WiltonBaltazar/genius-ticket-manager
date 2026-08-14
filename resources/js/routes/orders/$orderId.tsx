@@ -45,7 +45,7 @@ function OrderStatusPage() {
     if (notFound) {
         return (
             <div className="mx-auto max-w-2xl px-6 py-24 text-center font-sans text-deep-purple">
-                <p>This order isn't available.</p>
+                <p>Este pedido não está disponível.</p>
             </div>
         );
     }
@@ -53,7 +53,7 @@ function OrderStatusPage() {
     if (!data) {
         return (
             <div className="mx-auto max-w-2xl px-6 py-24 text-center font-sans text-deep-purple/50">
-                Loading…
+                A carregar…
             </div>
         );
     }

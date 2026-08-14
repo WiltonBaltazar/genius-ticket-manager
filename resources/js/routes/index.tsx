@@ -47,7 +47,7 @@ function HomePage() {
     if (!data) {
         return (
             <div className="mx-auto max-w-2xl px-6 py-24 text-center font-sans text-deep-purple/50">
-                Loading…
+                A carregar…
             </div>
         );
     }
@@ -55,7 +55,12 @@ function HomePage() {
     if (!data.event) {
         return (
             <div className="mx-auto max-w-2xl px-6 py-24 text-center font-sans text-deep-purple">
-                <p>No events on sale right now — check back soon.</p>
+                <img
+                    src="/images/logo.png"
+                    alt="Genius Behind the Brands"
+                    className="mx-auto mb-8 h-auto w-48"
+                />
+                <p>Não há eventos à venda neste momento — volte em breve.</p>
             </div>
         );
     }
@@ -66,6 +71,12 @@ function HomePage() {
 
     return (
         <div className="mx-auto max-w-2xl px-6 py-12">
+            <img
+                src="/images/logo.png"
+                alt="Genius Behind the Brands"
+                className="mb-8 h-auto w-40"
+            />
+
             {event.hero_image_url && (
                 <img
                     src={event.hero_image_url}
@@ -75,7 +86,7 @@ function HomePage() {
             )}
 
             <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
-                {new Date(event.start_date).toLocaleDateString(undefined, {
+                {new Date(event.start_date).toLocaleDateString("pt", {
                     dateStyle: "long",
                 })}
             </p>
@@ -108,7 +119,7 @@ function HomePage() {
             {inCartForThisEvent && (
                 <div className="mt-8 border-t border-deep-purple/10 pt-8">
                     <h2 className="font-display text-2xl text-deep-purple">
-                        Your details
+                        Os seus dados
                     </h2>
                     <div className="mt-6">
                         <CheckoutDetailsForm

@@ -68,7 +68,7 @@ export function CheckoutDetailsForm({
                 }
                 setErrors(next);
             } else {
-                setFormError("Something went wrong. Please try again.");
+                setFormError("Ocorreu um erro. Tente novamente.");
             }
         } finally {
             setSubmitting(false);
@@ -78,7 +78,7 @@ export function CheckoutDetailsForm({
     if (!cart.eventId || cart.items.length === 0) {
         return (
             <p className="font-sans text-base text-deep-purple/70">
-                Your cart is empty.
+                O seu carrinho está vazio.
             </p>
         );
     }
@@ -120,7 +120,7 @@ export function CheckoutDetailsForm({
             {!loggedIn && session !== undefined && (
                 <div className="space-y-5">
                     <FormField
-                        label="Full name"
+                        label="Nome completo"
                         name="name"
                         type="text"
                         autoComplete="name"
@@ -130,7 +130,7 @@ export function CheckoutDetailsForm({
                         error={errors.name}
                     />
                     <FormField
-                        label="Email address"
+                        label="Endereço de email"
                         name="email"
                         type="email"
                         autoComplete="email"
@@ -140,7 +140,7 @@ export function CheckoutDetailsForm({
                         error={errors.email}
                     />
                     <FormField
-                        label="Phone number"
+                        label="Número de telefone"
                         name="phone"
                         type="tel"
                         autoComplete="tel"
@@ -154,7 +154,7 @@ export function CheckoutDetailsForm({
 
             {loggedIn && (
                 <p className="font-sans text-sm text-deep-purple/70">
-                    Booking as{" "}
+                    A reservar como{" "}
                     <span className="font-semibold text-deep-purple">
                         {session?.name} ({session?.email})
                     </span>
@@ -166,7 +166,7 @@ export function CheckoutDetailsForm({
                 disabled={submitting}
                 className="w-full rounded-md bg-deep-purple px-4 py-3 font-condensed text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
-                {submitting ? "Submitting…" : "Submit order"}
+                {submitting ? "A enviar…" : "Enviar pedido"}
             </button>
         </form>
     );

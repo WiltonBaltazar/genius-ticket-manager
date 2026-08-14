@@ -38,11 +38,11 @@ export function TicketTypeSelector({
                             </p>
                             {soldOut ? (
                                 <p className="mt-1 font-condensed text-xs font-semibold uppercase tracking-wide text-red-text">
-                                    Sold out
+                                    Esgotado
                                 </p>
                             ) : (
                                 <p className="mt-1 font-sans text-xs text-deep-purple/50">
-                                    {ticketType.availableQuantity} remaining
+                                    {ticketType.availableQuantity} restantes
                                 </p>
                             )}
                         </div>
@@ -53,7 +53,7 @@ export function TicketTypeSelector({
                                     <>
                                         <button
                                             type="button"
-                                            aria-label={`Remove one ${ticketType.name}`}
+                                            aria-label={`Remover um ${ticketType.name}`}
                                             onClick={() =>
                                                 cart.setQuantity(
                                                     ticketType.id,
@@ -71,7 +71,7 @@ export function TicketTypeSelector({
                                 )}
                                 <button
                                     type="button"
-                                    aria-label={`Add one ${ticketType.name}`}
+                                    aria-label={`Adicionar um ${ticketType.name}`}
                                     disabled={atLimit}
                                     onClick={() =>
                                         cart.add(eventId, eventSlug, ticketType)

@@ -44,7 +44,7 @@ function EventPage() {
     if (notFound) {
         return (
             <div className="mx-auto max-w-2xl px-6 py-24 text-center font-sans text-deep-purple">
-                <p>This event isn't available.</p>
+                <p>Este evento não está disponível.</p>
             </div>
         );
     }
@@ -52,13 +52,19 @@ function EventPage() {
     if (!data) {
         return (
             <div className="mx-auto max-w-2xl px-6 py-24 text-center font-sans text-deep-purple/50">
-                Loading…
+                A carregar…
             </div>
         );
     }
 
     return (
         <div className="mx-auto max-w-2xl px-6 py-12">
+            <img
+                src="/images/logo.png"
+                alt="Genius Behind the Brands"
+                className="mb-8 h-auto w-40"
+            />
+
             {data.event.hero_image_url && (
                 <img
                     src={data.event.hero_image_url}
@@ -68,7 +74,7 @@ function EventPage() {
             )}
 
             <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
-                {new Date(data.event.start_date).toLocaleDateString(undefined, {
+                {new Date(data.event.start_date).toLocaleDateString("pt", {
                     dateStyle: "long",
                 })}
             </p>
@@ -103,7 +109,7 @@ function EventPage() {
                     to="/checkout"
                     className="mt-6 block w-full rounded-md bg-deep-purple px-4 py-3 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple"
                 >
-                    Proceed to checkout — MZN {cart.total.toFixed(2)}
+                    Continuar para o pagamento — MZN {cart.total.toFixed(2)}
                 </Link>
             )}
         </div>

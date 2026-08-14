@@ -33,7 +33,7 @@ export function PaymentMethodStep({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const statusUrl = `${window.location.origin}/orders/${order.id}`;
-    const message = `Hi! I'd like to complete payment for order ${order.id} (MZN ${order.total_amount}). ${statusUrl}`;
+    const message = `Olá! Gostaria de concluir o pagamento do pedido ${order.id} (MZN ${order.total_amount}). ${statusUrl}`;
     const waLink = whatsappNumber
         ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
         : null;
@@ -59,7 +59,7 @@ export function PaymentMethodStep({
             if (fileInputRef.current) fileInputRef.current.value = "";
             onUploaded();
         } catch {
-            setUploadError("Couldn't upload that file. Please try again.");
+            setUploadError("Não foi possível enviar o ficheiro. Tente novamente.");
         } finally {
             setUploading(false);
         }
@@ -78,7 +78,7 @@ export function PaymentMethodStep({
                             : "border-deep-purple/20 text-deep-purple"
                     }`}
                 >
-                    Pay via WhatsApp
+                    Pagar via WhatsApp
                 </button>
                 <button
                     type="button"
@@ -90,15 +90,16 @@ export function PaymentMethodStep({
                             : "border-deep-purple/20 text-deep-purple"
                     }`}
                 >
-                    Pay via bank transfer
+                    Pagar por transferência bancária
                 </button>
             </div>
 
             {method === "whatsapp" ? (
                 <div className="rounded-md border border-deep-purple/10 p-4">
                     <p className="font-sans text-sm text-deep-purple/70">
-                        Message us on WhatsApp to arrange payment — your order
-                        reference and total are pre-filled.
+                        Envie-nos uma mensagem no WhatsApp para combinar o
+                        pagamento — a referência do pedido e o total já estão
+                        preenchidos.
                     </p>
                     {waLink ? (
                         <a
@@ -107,41 +108,41 @@ export function PaymentMethodStep({
                             rel="noreferrer"
                             className="mt-4 block w-full rounded-md bg-deep-purple px-4 py-3 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white hover:bg-gold hover:text-deep-purple"
                         >
-                            Open WhatsApp
+                            Abrir WhatsApp
                         </a>
                     ) : (
                         <p className="mt-4 font-sans text-sm text-red-text">
-                            WhatsApp checkout isn't configured yet — please
-                            use bank transfer instead.
+                            O pagamento via WhatsApp ainda não está
+                            configurado — utilize a transferência bancária.
                         </p>
                     )}
                 </div>
             ) : (
                 <div className="rounded-md border border-deep-purple/10 p-4 font-sans text-sm text-deep-purple">
                     <p>
-                        <span className="font-semibold">Account name:</span>{" "}
+                        <span className="font-semibold">Nome da conta:</span>{" "}
                         {bankDetails.accountName}
                     </p>
                     <p>
                         <span className="font-semibold">
-                            Account number:
+                            Número da conta:
                         </span>{" "}
                         {bankDetails.accountNumber}
                     </p>
                     <p>
-                        <span className="font-semibold">Bank:</span>{" "}
+                        <span className="font-semibold">Banco:</span>{" "}
                         {bankDetails.bankName}
                     </p>
                     <p>
-                        <span className="font-semibold">Branch:</span>{" "}
+                        <span className="font-semibold">Balcão:</span>{" "}
                         {bankDetails.branch}
                     </p>
                     <p className="mt-3">
-                        <span className="font-semibold">Reference:</span>{" "}
+                        <span className="font-semibold">Referência:</span>{" "}
                         {order.id}
                     </p>
                     <p>
-                        <span className="font-semibold">Amount:</span> MZN{" "}
+                        <span className="font-semibold">Montante:</span> MZN{" "}
                         {order.total_amount}
                     </p>
                     {bankDetails.instructions && (
@@ -158,8 +159,8 @@ export function PaymentMethodStep({
                     className="font-condensed text-xs font-semibold uppercase tracking-wide text-deep-purple"
                 >
                     {order.proof_of_payment_uploaded
-                        ? "Replace proof of payment"
-                        : "Upload proof of payment (optional)"}
+                        ? "Substituir comprovativo de pagamento"
+                        : "Enviar comprovativo de pagamento (opcional)"}
                 </label>
                 <input
                     id="proof-of-payment"
@@ -176,20 +177,20 @@ export function PaymentMethodStep({
                     disabled={!selectedFile || uploading}
                     className="mt-3 rounded-md bg-deep-purple px-4 py-2 font-condensed text-sm font-semibold uppercase tracking-wide text-white hover:bg-gold hover:text-deep-purple disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {uploading ? "Uploading…" : "Submit proof of payment"}
+                    {uploading ? "A enviar…" : "Enviar comprovativo"}
                 </button>
                 {justUploaded && (
                     <p
                         role="status"
                         className="mt-2 font-sans text-xs font-medium text-green-700"
                     >
-                        Proof of payment uploaded — a staff member will
-                        review it shortly.
+                        Comprovativo enviado — a nossa equipa irá analisá-lo
+                        em breve.
                     </p>
                 )}
                 {!justUploaded && order.proof_of_payment_uploaded && (
                     <p className="mt-1 font-sans text-xs text-deep-purple/50">
-                        Received — a staff member will review it shortly.
+                        Recebido — a nossa equipa irá analisá-lo em breve.
                     </p>
                 )}
                 {uploadError && (

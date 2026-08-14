@@ -16,7 +16,7 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
     return (
         <div>
             <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
-                Order {order.id}
+                Pedido {order.id}
             </p>
 
             {order.status === "paid" && (
@@ -24,7 +24,8 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
                     role="status"
                     className="mt-3 rounded-md border border-green-500/30 bg-green-50 px-4 py-3 font-sans text-sm font-medium text-green-800"
                 >
-                    Payment confirmed — your tickets are ready below.
+                    Pagamento confirmado — os seus bilhetes estão prontos
+                    abaixo.
                 </div>
             )}
 
@@ -33,8 +34,8 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
                     role="status"
                     className="mt-3 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 font-sans text-sm font-medium text-deep-purple"
                 >
-                    Awaiting payment. Complete one of the options below to
-                    confirm your order.
+                    A aguardar pagamento. Complete uma das opções abaixo para
+                    confirmar o seu pedido.
                 </div>
             )}
 
@@ -43,8 +44,8 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
                     role="status"
                     className="mt-3 rounded-md border border-red/30 bg-red/5 px-4 py-3 font-sans text-sm font-medium text-red-text"
                 >
-                    This order expired before payment was completed and its
-                    tickets were released back for sale.
+                    Este pedido expirou antes de o pagamento ser concluído e
+                    os bilhetes foram novamente disponibilizados para venda.
                 </div>
             )}
 
@@ -69,7 +70,7 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
             {order.status === "paid" && order.tickets.length > 0 && (
                 <div className="mt-6 space-y-2">
                     <p className="font-condensed text-xs font-semibold uppercase tracking-wide text-deep-purple">
-                        Your tickets
+                        Os seus bilhetes
                     </p>
                     {order.tickets.map((ticket, i) => (
                         <a
@@ -77,7 +78,7 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
                             href={ticket.pdf_url}
                             className="block rounded-md border border-deep-purple/20 px-4 py-3 font-sans text-sm font-semibold text-deep-purple hover:border-gold"
                         >
-                            Download ticket {i + 1} (PDF)
+                            Transferir bilhete {i + 1} (PDF)
                         </a>
                     ))}
                 </div>

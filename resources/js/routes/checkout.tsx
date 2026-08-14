@@ -14,10 +14,10 @@ function CheckoutPage() {
     return (
         <div className="mx-auto max-w-xl px-6 py-12">
             <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
-                Checkout
+                Finalizar compra
             </p>
             <h1 className="mt-3 font-display text-3xl text-deep-purple">
-                Your details
+                Os seus dados
             </h1>
 
             <div className="mt-8">

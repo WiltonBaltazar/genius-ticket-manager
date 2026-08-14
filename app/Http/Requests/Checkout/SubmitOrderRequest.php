@@ -36,4 +36,24 @@ class SubmitOrderRequest extends FormRequest
             'phone' => [Rule::requiredIf(! $authenticated), 'nullable', 'string', 'max:30'],
         ];
     }
+
+    /**
+     * The attendee-facing checkout form is in Portuguese (this app's public
+     * site is Mozambique-only), so its validation errors need to match —
+     * scoped to this request rather than the app's global locale, since the
+     * staff admin panel stays in English.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'O nome é obrigatório.',
+            'email.required' => 'O email é obrigatório.',
+            'email.email' => 'Introduza um endereço de email válido.',
+            'phone.required' => 'O número de telefone é obrigatório.',
+            'items.required' => 'Adicione pelo menos um bilhete ao carrinho.',
+            'items.min' => 'Adicione pelo menos um bilhete ao carrinho.',
+        ];
+    }
 }

@@ -9,9 +9,11 @@
         .meta { font-size: 14px; margin: 4px 0; }
         .qr { margin-top: 32px; text-align: center; }
         .code { margin-top: 12px; font-size: 11px; letter-spacing: 1px; color: #3C0D5F99; }
+        .logo { width: 160px; margin-bottom: 24px; }
     </style>
 </head>
 <body>
+    <img class="logo" src="data:image/png;base64,{{ $logoBase64 }}" alt="Genius Behind the Brands">
     <p class="eyebrow">{{ $event->name }}</p>
     <h1>{{ $ticketType->name }}</h1>
     <p class="meta">Attendee: {{ $attendeeName }}</p>
