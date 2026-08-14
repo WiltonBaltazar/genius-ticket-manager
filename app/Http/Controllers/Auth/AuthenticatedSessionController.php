@@ -12,6 +12,25 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthenticatedSessionController extends Controller
 {
+    /**
+     * No client-accessible "current session" endpoint existed before checkout
+     * needed one (feature 002 only ever returned attendee info from the login
+     * response itself) — added here since it belongs with the other session
+     * concerns, not because checkout owns it.
+     */
+    public function show(Request $request): JsonResponse
+    {
+        $attendee = $request->user('web');
+
+        return response()->json([
+            'attendee' => $attendee ? [
+                'id' => $attendee->id,
+                'name' => $attendee->name,
+                'email' => $attendee->email,
+            ] : null,
+        ]);
+    }
+
     public function store(LoginRequest $request, AuthenticateAttendeeAction $action): JsonResponse
     {
         $validated = $request->validated();

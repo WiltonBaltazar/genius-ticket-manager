@@ -4,12 +4,14 @@ import { registerRoute } from "./routes/auth/register";
 import { loginRoute } from "./routes/auth/login";
 import { forgotPasswordRoute } from "./routes/auth/forgot-password";
 import { eventShowRoute } from "./routes/events/$slug";
+import { checkoutRoute } from "./routes/checkout";
 
 const routeTree = rootRoute.addChildren([
     registerRoute,
     loginRoute,
     forgotPasswordRoute,
     eventShowRoute,
+    checkoutRoute,
 ]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });

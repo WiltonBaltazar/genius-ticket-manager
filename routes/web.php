@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredAttendeeController;
 use App\Http\Controllers\Checkout\EventCheckoutController;
+use App\Http\Controllers\Checkout\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -22,9 +23,15 @@ Route::get('/auth/{any?}', function () {
 Route::get('/events/{event:slug}', [EventCheckoutController::class, 'show'])
     ->name('events.show');
 
+Route::post('/checkout', [OrderController::class, 'store'])
+    ->name('checkout.store');
+
 Route::post('/register', [RegisteredAttendeeController::class, 'store'])
     ->middleware('throttle:register')
     ->name('register');
+
+Route::get('/session', [AuthenticatedSessionController::class, 'show'])
+    ->name('session.show');
 
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
     ->middleware('throttle:login')

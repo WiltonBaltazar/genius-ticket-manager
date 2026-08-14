@@ -1,7 +1,8 @@
-import { createRoute } from "@tanstack/react-router";
+import { createRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { rootRoute } from "../__root";
 import { getJson } from "../../lib/auth";
+import { useCart } from "../../lib/cart";
 import { TicketTypeSelector } from "../../components/checkout/TicketTypeSelector";
 
 type EventPayload = {
@@ -32,6 +33,7 @@ function EventPage() {
     const { slug } = eventShowRoute.useParams();
     const [data, setData] = useState<EventPayload | null>(null);
     const [notFound, setNotFound] = useState(false);
+    const cart = useCart();
 
     useEffect(() => {
         getJson<EventPayload>(`/events/${slug}`)
@@ -94,6 +96,15 @@ function EventPage() {
                     availableQuantity: tt.available_quantity,
                 }))}
             />
+
+            {cart.eventId === data.event.id && cart.items.length > 0 && (
+                <Link
+                    to="/checkout"
+                    className="mt-6 block w-full rounded-md bg-deep-purple px-4 py-3 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple"
+                >
+                    Proceed to checkout — MZN {cart.total.toFixed(2)}
+                </Link>
+            )}
         </div>
     );
 }
