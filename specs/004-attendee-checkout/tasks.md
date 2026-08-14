@@ -155,13 +155,13 @@ Single Laravel 13 monolith (per plan.md): backend under `app/{Actions,Http,Notif
 
 ### Tests for User Story 5 ⚠️ write first, must fail
 
-- [ ] T041 [P] [US5] Pest feature test `tests/Feature/Checkout/TicketPdfDownloadTest.php` — `GET /orders/{order}/tickets/{ticket}/pdf` returns a PDF only when the order is paid and the ticket belongs to it (AS1, FR-015); the response contains the event name, ticket type, and attendee name; 404 for a pending order's ticket, a mismatched order/ticket pair, or a nonexistent ticket
+- [X] T041 [P] [US5] Pest feature test `tests/Feature/Checkout/TicketPdfDownloadTest.php` — `GET /orders/{order}/tickets/{ticket}/pdf` returns a PDF only when the order is paid and the ticket belongs to it (AS1, FR-015); the response contains the event name, ticket type, and attendee name; 404 for a pending order's ticket, a mismatched order/ticket pair, or a nonexistent ticket
 
 ### Implementation for User Story 5
 
-- [ ] T042 [US5] Create `resources/views/tickets/pdf.blade.php` — event name, ticket type, attendee name, and an embedded QR image encoding the ticket's `qr_code` (not its `id`, research.md §5)
-- [ ] T043 [US5] Create `app/Http/Controllers/Checkout/TicketPdfController.php` — `GET /orders/{order}/tickets/{ticket}/pdf`, 404 unless paid and the ticket belongs to the order, renders T042 via `barryvdh/laravel-dompdf` with a QR image generated via `endroid/qr-code` (depends on T042)
-- [ ] T044 [US5] Register `GET /orders/{order}/tickets/{ticket}/pdf` in `routes/web.php` (depends on T043)
+- [X] T042 [US5] Create `resources/views/tickets/pdf.blade.php` — event name, ticket type, attendee name, and an embedded QR image encoding the ticket's `qr_code` (not its `id`, research.md §5)
+- [X] T043 [US5] Create `app/Http/Controllers/Checkout/TicketPdfController.php` — `GET /orders/{order}/tickets/{ticket}/pdf`, 404 unless paid and the ticket belongs to the order, renders T042 via `barryvdh/laravel-dompdf` with a QR image generated via `endroid/qr-code` (depends on T042)
+- [X] T044 [US5] Register `GET /orders/{order}/tickets/{ticket}/pdf` in `routes/web.php` (depends on T043)
 
 **Checkpoint**: All five user stories independently functional — the full checkout-to-ticket flow works end to end.
 

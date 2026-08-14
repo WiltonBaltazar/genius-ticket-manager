@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\RegisteredAttendeeController;
 use App\Http\Controllers\Checkout\EventCheckoutController;
 use App\Http\Controllers\Checkout\OrderController;
 use App\Http\Controllers\Checkout\ProofOfPaymentController;
+use App\Http\Controllers\Checkout\TicketPdfController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -38,6 +39,9 @@ Route::post('/orders/{order}/proof-of-payment', [ProofOfPaymentController::class
 Route::get('/admin/orders/{order}/proof-of-payment-file', [OrderProofOfPaymentController::class, 'show'])
     ->middleware('auth:staff')
     ->name('admin.orders.proof-of-payment');
+
+Route::get('/orders/{order}/tickets/{ticket}/pdf', [TicketPdfController::class, 'show'])
+    ->name('orders.tickets.pdf');
 
 Route::post('/register', [RegisteredAttendeeController::class, 'store'])
     ->middleware('throttle:register')
