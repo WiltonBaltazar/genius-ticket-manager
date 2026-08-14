@@ -9,4 +9,5 @@ enum OrderStatus: string
     case Failed = 'failed';
     case Refunded = 'refunded';
     case Cancelled = 'cancelled';
+    case Expired = 'expired';
 }

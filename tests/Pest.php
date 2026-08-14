@@ -14,20 +14,26 @@ use Tests\TestCase;
 |
 */
 
-// TicketTypeOversellTest needs two genuinely independent, uncommitted connections racing
-// the same row — a single wrapping transaction would serialize/mask the very race this test
-// exists to catch (constitution Principle III concurrency gate). Pest doesn't support binding
-// a directory's test case and then excluding one file from it, so the "rest of Feature" (both
-// Schema/ from feature 001 and Auth/ from feature 002) is built explicitly here, excluding
-// that one file, instead of a blanket `->in('Feature')`.
-$oversellTest = __DIR__.'/Feature/Schema/TicketTypeOversellTest.php';
+// TicketTypeOversellTest and OrderSubmissionOversellTest each need two genuinely
+// independent, uncommitted connections racing the same row — a single wrapping
+// transaction would serialize/mask the very race these tests exist to catch
+// (constitution Principle III concurrency gate). Pest doesn't support binding
+// a directory's test case and then excluding some files from it, so the "rest of
+// Feature" (Schema/ from feature 001, Auth/ from feature 002, Filament/ from
+// feature 003, Checkout/ from feature 004) is built explicitly here, excluding
+// those two files, instead of a blanket `->in('Feature')`.
+$noTransactionTests = [
+    __DIR__.'/Feature/Schema/TicketTypeOversellTest.php',
+    __DIR__.'/Feature/Checkout/OrderSubmissionOversellTest.php',
+];
 $otherFeatureTests = array_filter(
     array_merge(
         glob(__DIR__.'/Feature/Schema/*.php') ?: [],
         glob(__DIR__.'/Feature/Auth/*.php') ?: [],
         glob(__DIR__.'/Feature/Filament/*.php') ?: [],
+        glob(__DIR__.'/Feature/Checkout/*.php') ?: [],
     ),
-    fn (string $file): bool => $file !== $oversellTest
+    fn (string $file): bool => ! in_array($file, $noTransactionTests, true)
 );
 
 pest()->extend(TestCase::class)
@@ -35,7 +41,7 @@ pest()->extend(TestCase::class)
     ->in(...$otherFeatureTests);
 
 pest()->extend(TestCase::class)
-    ->in($oversellTest);
+    ->in(...array_filter($noTransactionTests, 'file_exists'));
 
 pest()->extend(TestCase::class)
     ->use(DatabaseTransactions::class)

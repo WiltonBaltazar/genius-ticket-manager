@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+    // WhatsApp checkout (004-attendee-checkout): a wa.me deep link to the
+    // organizer's number, not an API integration — see research.md §6.
+    'whatsapp' => [
+        'number' => env('WHATSAPP_ORGANIZER_NUMBER'),
+    ],
+
+    // Bank-transfer payment method (004-attendee-checkout): displayed as
+    // static instructions on the checkout payment step.
+    'bank_transfer' => [
+        'account_name' => env('BANK_TRANSFER_ACCOUNT_NAME'),
+        'account_number' => env('BANK_TRANSFER_ACCOUNT_NUMBER'),
+        'bank_name' => env('BANK_TRANSFER_BANK_NAME'),
+        'branch' => env('BANK_TRANSFER_BRANCH'),
+    ],
+
 ];

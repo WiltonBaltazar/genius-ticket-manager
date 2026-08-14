@@ -29,7 +29,7 @@ Single Laravel 13 monolith (per plan.md): backend under `app/{Actions,Http,Notif
 
 **Purpose**: Install the two new Composer dependencies this feature needs
 
-- [ ] T001 Run `composer require barryvdh/laravel-dompdf endroid/qr-code` (research.md §5)
+- [X] T001 Run `composer require barryvdh/laravel-dompdf endroid/qr-code` (research.md §5)
 
 ---
 
@@ -39,10 +39,10 @@ Single Laravel 13 monolith (per plan.md): backend under `app/{Actions,Http,Notif
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T002 [P] Add `Expired = 'expired'` case to `app/Enums/OrderStatus.php` (data-model.md, research.md §3)
-- [ ] T003 [P] Add `whatsapp.number` and `bank_transfer.*` (account_name, account_number, bank_name, branch) to `config/services.php`, sourced from new `.env` keys (data-model.md)
-- [ ] T004 Wire `tests/Feature/Checkout/*.php` into `tests/Pest.php`'s `DatabaseTransactions` group, excluding `OrderSubmissionOversellTest.php` — that test needs two genuinely independent, uncommitted connections racing the same row, exactly like the existing `TicketTypeOversellTest.php` exclusion it mirrors (see `tests/Pest.php`'s current comment for why)
-- [ ] T005 [P] Add an `expired()` state to `database/factories/OrderFactory.php` (`status: Expired`, `created_at` set in the past) — needed by US3's expiry tests
+- [X] T002 [P] Add `Expired = 'expired'` case to `app/Enums/OrderStatus.php` (data-model.md, research.md §3)
+- [X] T003 [P] Add `whatsapp.number` and `bank_transfer.*` (account_name, account_number, bank_name, branch) to `config/services.php`, sourced from new `.env` keys (data-model.md)
+- [X] T004 Wire `tests/Feature/Checkout/*.php` into `tests/Pest.php`'s `DatabaseTransactions` group, excluding `OrderSubmissionOversellTest.php` — that test needs two genuinely independent, uncommitted connections racing the same row, exactly like the existing `TicketTypeOversellTest.php` exclusion it mirrors (see `tests/Pest.php`'s current comment for why)
+- [X] T005 [P] Add an `expired()` state to `database/factories/OrderFactory.php` (`status: Expired`, `created_at` set in the past) — needed by US3's expiry tests
 
 **Checkpoint**: Enum, config, test harness, and factory support ready — user story work can begin.
 

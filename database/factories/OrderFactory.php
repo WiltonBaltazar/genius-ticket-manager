@@ -52,4 +52,23 @@ class OrderFactory extends Factory
             'refunded_at' => now(),
         ]);
     }
+
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => OrderStatus::Pending,
+            'payment_reference' => null,
+            'mpesa_checkout_request_id' => null,
+        ]);
+    }
+
+    public function expired(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => OrderStatus::Expired,
+            'payment_reference' => null,
+            'mpesa_checkout_request_id' => null,
+            'created_at' => now()->subHours(25),
+        ]);
+    }
 }
