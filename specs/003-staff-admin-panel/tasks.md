@@ -56,7 +56,7 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 - [ ] T016 [P] Create `app/Policies/EventPolicy.php` — `viewAny`/`view`/`create`/`update` true for `super_admin` and `event_manager`; `delete` true only for `super_admin`; everything false for `support`, `gate_operator`, and any unrecognized role (data-model.md Role→Resource matrix, spec.md FR-004/FR-010; depends on T004, T008)
 - [ ] T017 [P] Create `app/Policies/TicketTypePolicy.php` — `viewAny`/`view`/`create`/`update` true for `super_admin` and `event_manager`; `delete` always false for every role, including `super_admin` (research.md §6, spec.md FR-011); everything false for `support`, `gate_operator` (depends on T004, T008)
 - [ ] T018 [P] Create `app/Policies/OrderPolicy.php` — `viewAny`/`view` true for `super_admin`, `event_manager`, `support`; `create`/`update`/`delete` always false for every role (spec.md FR-016); everything false for `gate_operator` (depends on T004, T008)
-- [ ] T019 Modify `database/seeders/DatabaseSeeder.php` (or add a `database/seeders/StaffSeeder.php` called from it) — seed exactly one `super_admin` and one `event_manager` `Staff` row with placeholder, non-production credentials (spec.md FR-020; depends on T008, T013)
+- [ ] T019 Modify `database/seeders/DatabaseSeeder.php` (or add a `database/seeders/StaffSeeder.php` called from it) — seed exactly one `super_admin` and one `event_manager` `Staff` row with placeholder, non-production credentials; guard the seeder with `app()->environment(['local', 'testing'])` (or an explicit `--force`-style override) so it refuses to run in production (spec.md FR-020; depends on T008, T013)
 
 **Checkpoint**: Schema, enums, models, policies, and seed data ready — user story work can begin.
 
@@ -70,7 +70,7 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 
 ### Tests for User Story 1 ⚠️ write first, must fail
 
-- [ ] T020 [P] [US1] Pest feature test `tests/Feature/Filament/StaffAuthenticationTest.php` — unauthenticated `GET /admin` redirects to `/admin/login`, not the attendee-facing `/auth/login` (FR-002, SC-001, the spec's explicit "unauthenticated request to /admin redirects to /admin/login" test); a seeded staff member can log in via `/admin/login` and lands on the dashboard, session established under the `staff` guard (FR-001, FR-003, the spec's explicit "staff login redirect when unauthenticated" test read as its positive case); `super_admin` sees Events, Ticket Types, and Orders nav entries; `gate_operator` sees none of the three and a direct `GET` to each resource's index route is refused (FR-005, SC-006)
+- [ ] T020 [P] [US1] Pest feature test `tests/Feature/Filament/StaffAuthenticationTest.php` — unauthenticated `GET /admin` redirects to `/admin/login`, not the attendee-facing `/auth/login` (FR-002, SC-001, the spec's explicit "unauthenticated request to /admin redirects to /admin/login" test); a seeded staff member can log in via `/admin/login` and lands on the dashboard, session established under the `staff` guard (FR-001, FR-003, the spec's explicit "staff login redirect when unauthenticated" test read as its positive case); `super_admin` sees Events, Ticket Types, and Orders nav entries; `gate_operator` sees none of the three and a direct `GET` to each resource's index route is refused (FR-005, SC-006); a signed-in staff member whose role is changed to `gate_operator` (or account deactivated) mid-session loses access on their very next request, with no separate logout/session-invalidation step (FR-022)
 
 ### Implementation for User Story 1
 
@@ -88,11 +88,11 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 
 ### Tests for User Story 2 ⚠️ write first, must fail
 
-- [ ] T022 [P] [US2] Pest feature test `tests/Feature/Filament/EventResourcePolicyTest.php` — `event_manager` creates an event with name, unique slug, location, date/time, hero image, description, status, and internal notes, and it appears in the events list (FR-006, FR-008, User Story 2 AS1, the spec's explicit "event_manager can create an event" test); duplicate slug rejected (FR-007, AS5); filtering the list by status returns only matching events (FR-009, AS2); `support` attempting to create or edit an event is refused (FR-004, AS3, the spec's explicit "support role cannot create an event" test); `event_manager` attempting to delete an event is refused, only `super_admin` can (FR-010, AS4)
+- [ ] T022 [P] [US2] Pest feature test `tests/Feature/Filament/EventResourcePolicyTest.php` — `event_manager` creates an event with name, unique slug, location, date/time, hero image, description, status, and internal notes, and it appears in the events list (FR-006, FR-008, User Story 2 AS1, the spec's explicit "event_manager can create an event" test); an event saves successfully with no hero image and no description (FR-006 optionality); duplicate slug rejected (FR-007, AS5); an oversized/unsupported hero image upload is rejected with an inline validation error and the event is not saved (FR-025); filtering the list by status returns only matching events (FR-009, AS2); `support` attempting to create or edit an event is refused (FR-004, AS3, the spec's explicit "support role cannot create an event" test); `event_manager` attempting to delete an event is refused, only `super_admin` can (FR-010, AS4); saving an edit to an event another staff member deleted moments earlier fails with a not-found error and the edit is discarded (FR-024)
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Create `app/Filament/Resources/Events/EventResource.php` — form: name, slug, location (`venue`), date/time (`start_date`), hero image upload, rich-text description, status select (draft/published/closed/archived, unrestricted transitions), internal notes; table: name, location, date/time, status badge, created date, with a status filter; policy-driven (FR-006–FR-010; depends on T009, T016)
+- [ ] T023 [US2] Create `app/Filament/Resources/Events/EventResource.php` — form: name, slug, location (`venue`), date/time (`start_date`), hero image upload (`nullable()`, restricted to standard web image types/size via `acceptedFileTypes()`/`maxSize()`, FR-025), rich-text description (`nullable()`), status select (draft/published/closed/archived, unrestricted transitions), internal notes; table: name, location, date/time, status badge, created date, default-sorted by created date descending, sortable columns, standard pagination (FR-008), with a status filter; policy-driven (FR-006–FR-010, FR-025; depends on T009, T016)
 - [ ] T024 [P] [US2] Create `app/Filament/Resources/Events/Pages/ListEvents.php`, `CreateEvent.php`, `EditEvent.php`, `ViewEvent.php` (depends on T023)
 
 **Checkpoint**: At this point, User Stories 1 AND 2 both work independently.
@@ -107,11 +107,11 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 
 ### Tests for User Story 3 ⚠️ write first, must fail
 
-- [ ] T025 [P] [US3] Pest feature test `tests/Feature/Filament/TicketTypeResourcePolicyTest.php` — `event_manager` creates a ticket type with event select, name, description, MZN price, total quantity, and a sales start/end window (FR-011, AS1); `total_quantity` stays editable while `available_quantity === total_quantity` (AS2); once `available_quantity < total_quantity`, `total_quantity` renders read-only (FR-013, AS3, SC-004); `available_quantity` is always read-only regardless of sales state (FR-012, AS4); `support`/`gate_operator` refused view/create/edit (AS5); no delete action is registered or reachable for this resource, for any role including `super_admin` (research.md §6)
+- [ ] T025 [P] [US3] Pest feature test `tests/Feature/Filament/TicketTypeResourcePolicyTest.php` — `event_manager` creates a ticket type with event select, name, description, MZN price, total quantity, and a sales start/end window (FR-011, AS1); a sales end date before the sales start date is rejected with a validation error at save time (FR-026); `total_quantity` stays editable while `available_quantity === total_quantity` (AS2); once `available_quantity < total_quantity`, `total_quantity` renders read-only, re-checked against current DB state at save time so a sale recorded after the form loaded still blocks the save (FR-013, AS3, SC-004); `available_quantity` is always read-only regardless of sales state (FR-012, AS4); `support`/`gate_operator` refused view/create/edit (AS5); no delete action is registered or reachable for this resource, for any role including `super_admin` (research.md §6); saving an edit to a ticket type another staff member deleted moments earlier fails with a not-found error (FR-024)
 
 ### Implementation for User Story 3
 
-- [ ] T026 [US3] Create `app/Filament/Resources/TicketTypes/TicketTypeResource.php` — `navigationGroup('Events')`; form: event select, name, description, price (MZN, no unit conversion per research.md §4), total_quantity (`disabled()` when `available_quantity < total_quantity`), available_quantity (always `disabled()`, defaults to submitted total_quantity on create), sales_start_date, sales_end_date (validated end ≥ start); table listing; no delete action registered anywhere on the resource (FR-011–FR-013; depends on T010, T017)
+- [ ] T026 [US3] Create `app/Filament/Resources/TicketTypes/TicketTypeResource.php` — `navigationGroup('Events')`; form: event select, name, description, price (MZN, no unit conversion per research.md §4), total_quantity (`disabled()` when `available_quantity < total_quantity` for display, AND re-validated server-side in `mutateFormDataBeforeSave()`/a model `saving` guard against the record's current DB state so a bypassed/stale `disabled()` can't slip a change through — closes the FR-013 race), available_quantity (always `disabled()`, defaults to submitted total_quantity on create), sales_start_date, sales_end_date (validated end ≥ start via a form-level rule, FR-026); table listing; no delete action registered anywhere on the resource (FR-011–FR-013, FR-026; depends on T010, T017)
 - [ ] T027 [P] [US3] Create `app/Filament/Resources/TicketTypes/Pages/ListTicketTypes.php`, `CreateTicketType.php`, `EditTicketType.php` (no delete page) (depends on T026)
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 all work independently.
@@ -126,7 +126,7 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 
 ### Tests for User Story 4 ⚠️ write first, must fail
 
-- [ ] T028 [P] [US4] Pest feature test `tests/Feature/Filament/OrderResourcePolicyTest.php` — `super_admin`, `event_manager`, and `support` can each view an order's id, attendee, email, event (via the new `Order::event()` accessor), status badge, total (MZN), payment method, and created date, with none editable (FR-015, FR-016, AS1); the order's line items (ticket type, quantity, unit price) display read-only (FR-017, AS2); `gate_operator` is refused entirely, no order data shown (FR-018, AS3); the resource exposes no create or edit route
+- [ ] T028 [P] [US4] Pest feature test `tests/Feature/Filament/OrderResourcePolicyTest.php` — `super_admin`, `event_manager`, and `support` can each view an order's id, attendee, email, event (via the new `Order::event()` accessor), status badge, total (MZN), payment method, and created date, with none editable (FR-015, FR-016, AS1); the order's line items (ticket type, quantity, unit price) display read-only (FR-017, AS2); an order with zero order items renders its line-items list as empty rather than erroring (FR-027); `gate_operator` is refused entirely, no order data shown (FR-018, AS3); the resource exposes no create or edit route
 
 ### Implementation for User Story 4
 
@@ -163,7 +163,7 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 - [ ] T034 [P] Execute `specs/003-staff-admin-panel/quickstart.md` steps 1–9 end-to-end and record results in `specs/003-staff-admin-panel/quickstart-results.md`
 - [ ] T035 [P] Accessibility spot-check across all three resources and the dashboard against WCAG 2.1 AA (Filament's component library is accessible by default per plan.md's Constitution Check row V — this step confirms nothing in this feature's custom form/table/widget configuration broke that), recording findings in `specs/003-staff-admin-panel/quickstart-results.md`
 - [ ] T036 Run Pint (`vendor/bin/pint`) on all new/modified PHP files, per constitution Principle I's formatting gate
-- [ ] T037 Re-validate `specs/003-staff-admin-panel/checklists/readiness.md` — check off any additional items this implementation resolves beyond the five already closed during planning, and flag any still-open requirements-level items for follow-up
+- [ ] T037 Re-validate `specs/003-staff-admin-panel/checklists/readiness.md` (already 33/33 as of the 2026-08-14 `/speckit-clarify` pass) — confirm the implementation matches each resolved item's stated requirement, especially FR-013/FR-022/FR-024/FR-025/FR-026/FR-027, and flag any drift for follow-up
 
 ---
 
@@ -242,4 +242,5 @@ After Foundational: Developer A takes US2 (Events), Developer B takes US3 (Ticke
 - Every test task must fail before its implementation tasks, per constitution Principle III's general testing gate
 - The two real schema/enum conflicts discovered during planning (research.md §2, §3) are resolved in Phase 2 (T005, T006), not left for a story phase to discover
 - T017/T026's "no delete action for Ticket Types" and T016/T023's "delete restricted to super_admin for Events" together resolve the FR-004/FR-011 ambiguity the readiness checklist flagged (checklists/readiness.md CHK032) — already fixed at the spec level, implemented here per that fix
+- FR-023 (last-write-wins on concurrent Event/Ticket Type edits) requires no implementation task — it's Filament's unmodified default save behavior; no optimistic-locking code should be added for this feature
 - Commit after each task or logical group
