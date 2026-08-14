@@ -126,12 +126,12 @@ Single Laravel 13 monolith (per plan.md): Filament panel/resources/policies unde
 
 ### Tests for User Story 4 ⚠️ write first, must fail
 
-- [ ] T028 [P] [US4] Pest feature test `tests/Feature/Filament/OrderResourcePolicyTest.php` — `super_admin`, `event_manager`, and `support` can each view an order's id, attendee, email, event (via the new `Order::event()` accessor), status badge, total (MZN), payment method, and created date, with none editable (FR-015, FR-016, AS1); the order's line items (ticket type, quantity, unit price) display read-only (FR-017, AS2); an order with zero order items renders its line-items list as empty rather than erroring (FR-027); `gate_operator` is refused entirely, no order data shown (FR-018, AS3); the resource exposes no create or edit route
+- [X] T028 [P] [US4] Pest feature test `tests/Feature/Filament/OrderResourcePolicyTest.php` — `super_admin`, `event_manager`, and `support` can each view an order's id, attendee, email, event (via the new `Order::event()` accessor), status badge, total (MZN), payment method, and created date, with none editable (FR-015, FR-016, AS1); the order's line items (ticket type, quantity, unit price) display read-only (FR-017, AS2); an order with zero order items renders its line-items list as empty rather than erroring (FR-027); `gate_operator` is refused entirely, no order data shown (FR-018, AS3); the resource exposes no create or edit route
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Create `app/Filament/Resources/Orders/OrderResource.php` — infolist-only display (id, attendee, `attendee.email`, `event()`, status badge, total labeled "Total (MZN)", payment method, created date) plus a `RepeatableEntry` for order items (ticket type name, quantity, unit price); no form/Create/Edit pages registered (FR-015–FR-017; depends on T011, T018)
-- [ ] T030 [P] [US4] Create `app/Filament/Resources/Orders/Pages/ListOrders.php`, `ViewOrder.php` (depends on T029)
+- [X] T029 [US4] Create `app/Filament/Resources/Orders/OrderResource.php` — infolist-only display (id, attendee, `attendee.email`, `event()`, status badge, total labeled "Total (MZN)", payment method, created date) plus a `RepeatableEntry` for order items (ticket type name, quantity, unit price); no form/Create/Edit pages registered (FR-015–FR-017; depends on T011, T018)
+- [X] T030 [P] [US4] Create `app/Filament/Resources/Orders/Pages/ListOrders.php`, `ViewOrder.php` (depends on T029)
 
 **Checkpoint**: At this point, User Stories 1–4 all work independently.
 
