@@ -11,9 +11,10 @@ use App\Http\Controllers\Checkout\ProofOfPaymentController;
 use App\Http\Controllers\Checkout\TicketPdfController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Dual-purpose, same as GET /events/{event:slug} below: the public landing
+// page and ticket-buying entry point (004-attendee-checkout follow-up).
+Route::get('/', [EventCheckoutController::class, 'index'])
+    ->name('events.index');
 
 // SPA shell for every attendee-facing auth screen (TanStack Router handles client-side
 // routing beneath this single Blade entry point).
