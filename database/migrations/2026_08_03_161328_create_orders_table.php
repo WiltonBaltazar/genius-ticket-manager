@@ -17,7 +17,10 @@ return new class extends Migration
             $table->foreignUuid('attendee_id')->constrained('attendees')->restrictOnDelete();
             $table->string('status', 20);
             $table->string('transaction_hash')->unique();
-            $table->string('stripe_payment_intent_id')->nullable()->unique();
+            $table->string('payment_method', 20);
+            $table->string('payment_reference')->nullable()->unique();
+            $table->string('mpesa_checkout_request_id')->nullable()->unique();
+            $table->string('proof_of_payment_path')->nullable();
             $table->decimal('total_amount', 10, 2);
             $table->string('ip_address', 45);
             $table->string('user_agent', 512)->nullable();

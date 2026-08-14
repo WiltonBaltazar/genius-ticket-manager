@@ -1,31 +1,52 @@
 <!--
 Sync Impact Report
 ===================
-Version change: 1.0.0 → 1.1.0
+Version change: 1.1.0 → 2.0.0
 
-Modified principles: N/A (no existing principle redefined)
+Modified principles:
+- II. Security by Design (NON-NEGOTIABLE) — payment-gateway-specific
+  security controls redefined: removed the Stripe publishable-key/CSP
+  iframe model (replaced with server-only M-Pesa credentials, since STK
+  push is initiated server-to-server with no client-embedded payment form)
+  and removed the Stripe webhook-signature-verification requirement
+  (replaced with CheckoutRequestID validation against a pending order + an
+  IP-allowlisted, secret callback URL, since Vodacom M-Pesa Mozambique
+  callbacks are not cryptographically signed); added an explicit
+  staff-authentication requirement gating offline-payment confirmation.
+- III. Test-First for Booking-Critical Paths (NON-NEGOTIABLE) — "webhook
+  handling (Stripe mocked)" replaced with "M-Pesa STK push callback
+  handling (mocked) and offline payment confirmation handling".
+- IV. Data Integrity & Immutable Audit Trail — mandated index changed from
+  `(stripe_payment_intent_id)` to `(payment_reference)`; "Stripe webhook
+  payloads" reference changed to "M-Pesa callback payloads".
+- V. Accessible, On-Brand Experience — booking flow step 3 changed from
+  "pay via Stripe" to "pay via M-Pesa or offline bank transfer".
 
-Materially expanded guidance:
-- Technology Stack & Design System → Frontend & Public Site: added a
-  requirement that full screens/page layouts combine the `react-builder`
-  and `frontend-design` Claude Code skills together, not `react-builder`
-  alone, so implementation and aesthetic/UX direction are produced jointly.
+Also updated: Development Workflow & Quality Gates → Deployment Pipeline
+(Stripe sandbox validation → Vodacom M-Pesa Open API sandbox validation +
+an offline-payment staff-confirmation workflow dry run).
 
-Added sections: N/A (existing subsection expanded, not a new section)
+Added sections: N/A
 
-Removed sections: N/A
+Removed sections: N/A (no principle removed; Stripe-specific controls
+within Principle II were replaced with M-Pesa/offline equivalents, not
+deleted without substitution)
 
 Templates requiring updates:
-- .specify/templates/plan-template.md ✅ no changes needed (already
-  generic; "Constitution Check" gate references this file dynamically)
+- .specify/templates/plan-template.md ✅ no changes needed (technology-
+  agnostic; "Constitution Check" gate references this file dynamically)
 - .specify/templates/spec-template.md ✅ no changes needed (technology-agnostic)
 - .specify/templates/tasks-template.md ✅ no changes needed (technology-agnostic)
-- .claude/skills/speckit-constitution/SKILL.md ✅ no stale agent-specific
-  references found
-- README.md / docs/deployment-runbook.md ✅ checked — neither references
-  react-builder or frontend-design, no updates needed
+- .claude/skills/speckit-constitution/SKILL.md ✅ no stale references found
+- README.md ✅ checked — no payment-provider references
+- docs/deployment-runbook.md ✅ checked — no Stripe references (its
+  audit_logs grant and proxy/session sections are payment-provider-agnostic)
 
-Follow-up TODOs: none
+Follow-up TODOs:
+- Existing feature artifacts under specs/001-core-database-schema/ (schema,
+  migration, model, factory, tests) still referencing
+  `stripe_payment_intent_id` are corrected in that feature's own spec
+  documents as part of this same correction, not tracked further here.
 -->
 
 # Genius Behind the Brands Annual Event Ticketing System Constitution
@@ -64,24 +85,35 @@ All input MUST be validated server-side via Laravel Form Requests; no
 client-side-only validation may gate a mutating action. CSRF protection
 MUST be active on every mutating endpoint (Blade tokens, Livewire
 auto-tokens). Payment and contact endpoints (including `/api/orders`) MUST
-be rate-limited to 5 requests/minute per IP. No secret keys may ship in the
-React bundle — only the Stripe publishable key, sourced from `.env.public`,
-may reach client code. CSP headers MUST restrict framed/embedded content to
-the Stripe iframe origin. HTTPS MUST be enforced at the middleware and
-environment level. The Filament admin panel MUST sit behind authentication
-and policy-based authorization for every resource and action. Orders and
-Refunds MUST carry audit fields (`created_by`, `confirmed_by`,
-`confirmed_at`, `refunded_by`), and every payment state change MUST be
-written to the immutable `audit_logs` table. Stripe webhook payloads MUST
-have their signature verified before any processing occurs. Every payment
-request MUST carry an idempotency key to prevent duplicate charges.
+be rate-limited to 5 requests/minute per IP. All M-Pesa API credentials
+(consumer key/secret, API certificate) are server-side only and MUST NEVER
+reach the React bundle or any client-executed code — M-Pesa STK push is
+initiated entirely server-to-server (the buyer only ever sees a payment
+prompt on their own phone), so unlike a client-embedded payment form there
+is no publishable/client-side key of any kind to expose. HTTPS MUST be
+enforced at the middleware and environment level. The Filament admin panel
+MUST sit behind authentication and policy-based authorization for every
+resource and action. Orders and Refunds MUST carry audit fields
+(`created_by`, `confirmed_by`, `confirmed_at`, `refunded_by`), and every
+payment state change MUST be written to the immutable `audit_logs` table.
+Vodacom M-Pesa Mozambique callbacks are not cryptographically signed the
+way many payment-gateway webhooks are, so the M-Pesa callback endpoint MUST
+instead validate the incoming `CheckoutRequestID` against a known pending
+order before processing it, MUST be restricted to Vodacom's published
+callback IP range, and MUST use a secret, unguessable URL path. Offline
+payment confirmations MUST require an authenticated staff member with
+resource-level authorization before an order transitions to `paid` — no
+anonymous or buyer-initiated confirmation is permitted for either payment
+method. Every payment request (M-Pesa STK push initiation or offline order
+creation) MUST carry an idempotency key to prevent duplicate charges.
 Attendee records MUST use soft deletes to support GDPR/POPIA erasure
 requests without breaking referential integrity.
 
 **Rationale**: This system moves real money and personal data for a public
 event. Each control here closes a specific, known attack or failure class
-(duplicate charges, CSRF, forged webhooks, leaked secrets, un-auditable
-refunds) rather than being generic best practice — none are optional.
+(duplicate charges, CSRF, unauthenticated payment callbacks, leaked
+secrets, un-auditable refunds) rather than being generic best practice —
+none are optional.
 
 ### III. Test-First for Booking-Critical Paths (NON-NEGOTIABLE)
 
@@ -89,8 +121,9 @@ No booking-critical feature (ticket selection, cart, checkout, payment,
 webhook handling, refunds, inventory locking, check-in/QR scanning) may be
 marked complete without automated tests covering its happy path, its
 validation failures, and its concurrency/edge cases. Backend: Pest feature
-tests for order creation, payment processing, webhook handling (Stripe
-mocked), inventory locking, refund flow, and email notifications; Pest unit
+tests for order creation, payment processing, M-Pesa STK push callback
+handling (mocked) and offline payment confirmation handling, inventory
+locking, refund flow, and email notifications; Pest unit
 tests for every action/service class; policy tests for every Filament
 authorization rule (e.g., Event Manager edits only own events, Support
 Agent has view-only access to orders). Concurrency tests MUST simulate two
@@ -114,11 +147,11 @@ UUID primary keys (`CHAR(36)`) except `audit_logs`, which uses a
 keys MUST be enforced at the database level with `ON DELETE RESTRICT`.
 `users` and `orders` MUST support soft deletes via `deleted_at`. Frequently
 queried columns MUST be indexed: `(event_id, status)`,
-`(attendee_id, created_at DESC)`, `(stripe_payment_intent_id)`,
+`(attendee_id, created_at DESC)`, `(payment_reference)`,
 `(qr_code)`. The `audit_logs` table is append-only: the application layer
 MUST NOT issue UPDATE or DELETE against it, and database-level permissions
 MUST restrict the application's database user to INSERT-only on that
-table. Stripe webhook payloads and other complex audit data MUST be stored
+table. M-Pesa callback payloads and other complex audit data MUST be stored
 in JSON columns rather than flattened into ad-hoc fields.
 
 **Rationale**: Ticket sales, refunds, and check-ins must be reconstructible
@@ -130,7 +163,8 @@ bug or compromised admin session — a code-level check alone would not.
 
 The booking flow MUST remain a short, linear 3-step process: (1) select
 tickets and quantity, (2) enter attendee details and email, (3) pay via
-Stripe — with no dead ends and no fields beyond what each step requires.
+M-Pesa or offline bank transfer — with no dead ends and no fields beyond
+what each step requires.
 Every step MUST show clear state: live availability in the cart, an order
 total with fee breakdown at checkout, and a confirmation page with order ID
 and a PDF ticket download link. The experience MUST be fully responsive and
@@ -245,7 +279,9 @@ follow-up task.
 ### Deployment Pipeline
 
 Deployment to production occurs only after staging validation against the
-Stripe sandbox. Deployment is via Git push (webhook-triggered Composer
+Vodacom M-Pesa Open API sandbox/test environment and a dry run of the
+offline-payment staff-confirmation workflow. Deployment is via Git push
+(webhook-triggered Composer
 install + migrations) or manual SFTP upload plus CLI commands, matching the
 shared-hosting constraints in Principle VI. SSL is provided by the hosting
 provider (e.g., cPanel AutoSSL). Backups: the hosting provider's daily
@@ -282,4 +318,4 @@ the applicable principles above (the "Constitution Check" gate in
 and justified in that plan's Complexity Tracking table — undocumented
 deviation is treated as a defect, not a shortcut.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-29 | **Last Amended**: 2026-08-03
+**Version**: 2.0.0 | **Ratified**: 2026-07-29 | **Last Amended**: 2026-08-04

@@ -108,7 +108,10 @@ Maps to spec entity **Order** (FR-005, FR-006, FR-007, FR-019).
 | attendee_id | CHAR(36) FK → attendees.id | ON DELETE RESTRICT |
 | status | VARCHAR(20) | backed enum `OrderStatus`: `pending`, `paid`, `failed`, `refunded`, `cancelled` (research #2) |
 | transaction_hash | VARCHAR(255) | payment idempotency token |
-| stripe_payment_intent_id | VARCHAR(255) NULL | payment-processor reference |
+| payment_method | VARCHAR(20) | backed enum `PaymentMethod`: `mpesa`, `offline` |
+| payment_reference | VARCHAR(255) NULL | canonical payment reference once confirmed — an M-Pesa receipt number or an offline confirmation reference; the FR-019/FR-006 payment-processor lookup/idempotency column |
+| mpesa_checkout_request_id | VARCHAR(255) NULL | M-Pesa only: the `CheckoutRequestID` returned synchronously when STK push is initiated, used to correlate the later asynchronous callback to this order before `payment_reference` is known |
+| proof_of_payment_path | VARCHAR(255) NULL | offline only: storage path to the buyer-uploaded proof-of-payment (bank deposit/transfer receipt) |
 | total_amount | DECIMAL(10,2) | |
 | ip_address | VARCHAR(45) | fraud detection (IPv4/IPv6) |
 | user_agent | VARCHAR(512) NULL | fraud detection |
@@ -120,7 +123,7 @@ Maps to spec entity **Order** (FR-005, FR-006, FR-007, FR-019).
 | created_at, updated_at | TIMESTAMP | |
 | deleted_at | TIMESTAMP NULL | soft delete |
 
-**Indexes**: `UNIQUE (transaction_hash)` — payment idempotency (FR-006); `UNIQUE (stripe_payment_intent_id)` — order lookup by payment reference (FR-019); `INDEX (attendee_id, status)` — order lookup by attendee/status (FR-019); `INDEX (attendee_id, created_at DESC)` — constitution Principle IV mandated index for reverse-chronological attendee order history.
+**Indexes**: `UNIQUE (transaction_hash)` — payment idempotency (FR-006); `UNIQUE (payment_reference)` — order lookup by payment reference (FR-019), constitution Principle IV mandated index; `UNIQUE (mpesa_checkout_request_id)` — idempotent correlation of an M-Pesa callback to its initiating order; `INDEX (attendee_id, status)` — order lookup by attendee/status (FR-019); `INDEX (attendee_id, created_at DESC)` — constitution Principle IV mandated index for reverse-chronological attendee order history.
 
 **Relationships**: `belongsTo` Attendee; `hasMany` OrderItem; `hasMany` PaymentEvent.
 
@@ -233,5 +236,7 @@ AuditLog ──> (polymorphic) Order | Ticket | Event | TicketType | Attendee | 
 **Constitution index reconciliation**: Principle IV's `(event_id, status)` index tuple has no single table with both an `event_id` FK and a `status` column to index directly. It is satisfied jointly by `events(status, start_date)` (status filtering) and `ticket_types(event_id)` (per-event availability lookups) instead of one literal composite index.
 
 **Post-implementation reconciliation (T063)**: Cross-checked against the actual implemented migrations on 2026-08-03. Two documentation-only drifts were corrected here: `attendees.phone` and `staff.role` are `VARCHAR(255)` (Laravel's default string length) rather than the originally-documented `VARCHAR(50)` — harmless and left as-is rather than altering already-tested migrations. `attendees.ip_address_last_seen` — a speculative, optional column never tied to any functional requirement or task, and never implemented — was removed from this document rather than added to the schema. Every other column, index, and constraint in this document was confirmed to match the implementation exactly.
+
+**Payment provider correction (2026-08-04)**: The project does not use Stripe. Per the amended constitution (v2.0.0), payments are collected via M-Pesa Vodacom Mozambique (STK push initiated server-side, confirmed by an asynchronous callback) or an offline bank deposit/transfer confirmed manually by staff. `orders.stripe_payment_intent_id` was replaced with `payment_method`, `payment_reference`, `mpesa_checkout_request_id`, and `proof_of_payment_path` as described above; FR-019's "payment-processor reference" language already read generically and needed no wording change. The migration, `Order` model, `OrderFactory`, and the schema tests that exercised the old column were updated to match.
 
 **Output**: This data model, combined with `research.md`, fully specifies the schema and Eloquent model relationships. No `contracts/` artifact applies (see plan.md). Proceed to `quickstart.md` for the validation guide.

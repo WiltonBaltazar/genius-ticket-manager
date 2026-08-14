@@ -35,8 +35,8 @@ it('has the constitution-mandated orders(attendee_id, created_at DESC) index', f
         ->and($byColumn['created_at']->Collation)->toBe('D');
 });
 
-it('has the orders(stripe_payment_intent_id) unique index', function () {
-    assertIndexExists('orders', 'orders_stripe_payment_intent_id_unique');
+it('has the orders(payment_reference) unique index', function () {
+    assertIndexExists('orders', 'orders_payment_reference_unique');
 });
 
 it('has the tickets(qr_code) unique index', function () {

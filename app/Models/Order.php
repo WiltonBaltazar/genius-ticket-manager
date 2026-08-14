@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,10 @@ class Order extends Model
         'attendee_id',
         'status',
         'transaction_hash',
-        'stripe_payment_intent_id',
+        'payment_method',
+        'payment_reference',
+        'mpesa_checkout_request_id',
+        'proof_of_payment_path',
         'total_amount',
         'ip_address',
         'user_agent',
@@ -35,6 +39,7 @@ class Order extends Model
     {
         return [
             'status' => OrderStatus::class,
+            'payment_method' => PaymentMethod::class,
             'total_amount' => 'decimal:2',
             'confirmed_at' => 'datetime',
             'refunded_at' => 'datetime',

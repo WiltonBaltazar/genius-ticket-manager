@@ -52,7 +52,7 @@ All Technical Context fields were resolvable directly from the project constitut
 
 ## 7. `payment_events` payload storage
 
-**Decision**: Store the raw payment-processor notification as a `JSON` column (`payload`), per the constitution's explicit instruction that "Stripe webhook payloads and other complex audit data MUST be stored in JSON columns rather than flattened into ad-hoc fields."
+**Decision**: Store the raw payment-processor notification as a `JSON` column (`payload`), per the constitution's explicit instruction that "M-Pesa callback payloads and other complex audit data MUST be stored in JSON columns rather than flattened into ad-hoc fields."
 
 **Rationale**: Matches the constitution directly; avoids needing a schema migration every time the payment processor adds or changes a field in its webhook payloads.
 

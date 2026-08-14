@@ -37,20 +37,20 @@ it('returns the correct orders when looking up by attendee_id and status, using 
     );
 });
 
-it('returns the correct order when looking up by stripe_payment_intent_id, using its index', function () {
-    $target = Order::factory()->for(Attendee::factory())->create(['stripe_payment_intent_id' => 'pi_lookup_perf_test']);
+it('returns the correct order when looking up by payment_reference, using its index', function () {
+    $target = Order::factory()->for(Attendee::factory())->create(['payment_reference' => 'QGR7LOOKUPPERFTEST']);
 
     $start = microtime(true);
-    $found = Order::where('stripe_payment_intent_id', 'pi_lookup_perf_test')->first();
+    $found = Order::where('payment_reference', 'QGR7LOOKUPPERFTEST')->first();
     $elapsedMs = (microtime(true) - $start) * 1000;
 
     expect($found->id)->toBe($target->id)
         ->and($elapsedMs)->toBeLessThan(2000);
 
     assertUsesIndex(
-        'SELECT * FROM orders WHERE stripe_payment_intent_id = ?',
-        ['pi_lookup_perf_test'],
-        'orders_stripe_payment_intent_id_unique'
+        'SELECT * FROM orders WHERE payment_reference = ?',
+        ['QGR7LOOKUPPERFTEST'],
+        'orders_payment_reference_unique'
     );
 });
 

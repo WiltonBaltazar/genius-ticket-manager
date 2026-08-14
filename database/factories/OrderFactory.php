@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
 use App\Models\Attendee;
 use App\Models\Order;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,11 +27,22 @@ class OrderFactory extends Factory
             'attendee_id' => Attendee::factory(),
             'status' => OrderStatus::Paid,
             'transaction_hash' => Str::uuid()->toString(),
-            'stripe_payment_intent_id' => 'pi_'.fake()->unique()->regexify('[A-Za-z0-9]{24}'),
+            'payment_method' => PaymentMethod::Mpesa,
+            'payment_reference' => strtoupper(fake()->unique()->regexify('[a-z0-9]{10}')),
+            'mpesa_checkout_request_id' => 'ws_CO_'.fake()->unique()->regexify('[0-9]{18}'),
             'total_amount' => fake()->randomFloat(2, 20, 1000),
             'ip_address' => fake()->ipv4(),
             'user_agent' => fake()->userAgent(),
         ];
+    }
+
+    public function offline(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'payment_method' => PaymentMethod::Offline,
+            'mpesa_checkout_request_id' => null,
+            'proof_of_payment_path' => 'proof-of-payment/'.Str::uuid()->toString().'.pdf',
+        ]);
     }
 
     public function refunded(): static
