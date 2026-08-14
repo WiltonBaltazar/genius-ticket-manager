@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\OrderProofOfPaymentController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\PasswordResetController;
@@ -33,6 +34,10 @@ Route::get('/orders/{order}', [OrderController::class, 'show'])
 
 Route::post('/orders/{order}/proof-of-payment', [ProofOfPaymentController::class, 'store'])
     ->name('orders.proof-of-payment');
+
+Route::get('/admin/orders/{order}/proof-of-payment-file', [OrderProofOfPaymentController::class, 'show'])
+    ->middleware('auth:staff')
+    ->name('admin.orders.proof-of-payment');
 
 Route::post('/register', [RegisteredAttendeeController::class, 'store'])
     ->middleware('throttle:register')

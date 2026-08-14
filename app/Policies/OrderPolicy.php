@@ -21,14 +21,25 @@ class OrderPolicy
     public function create(Staff $staff): bool
     {
         // No order fields are ever created or edited from this admin panel
-        // (spec.md FR-016) — payment/refund state changes are a separate,
-        // out-of-scope workflow.
+        // (spec.md FR-016). Payment confirmation is a separate, narrow
+        // ability (confirmPayment() below, 004-attendee-checkout) — not a
+        // general create/edit capability on the resource.
         return false;
     }
 
     public function update(Staff $staff, Order $order): bool
     {
         return false;
+    }
+
+    /**
+     * 004-attendee-checkout: the one payment-state-change action this admin
+     * panel exposes — pending -> paid, via ConfirmOrderPaymentAction. Reuses
+     * the same role set as viewAny/view, per that feature's spec FR-013.
+     */
+    public function confirmPayment(Staff $staff, Order $order): bool
+    {
+        return $this->hasOrdersAccess($staff);
     }
 
     public function delete(Staff $staff, Order $order): bool

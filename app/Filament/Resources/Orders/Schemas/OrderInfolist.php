@@ -28,10 +28,17 @@ class OrderInfolist
                         OrderStatus::Failed => 'danger',
                         OrderStatus::Refunded => 'warning',
                         OrderStatus::Cancelled => 'danger',
+                        OrderStatus::Expired => 'danger',
                     }),
                 TextEntry::make('total_amount')->label('Total (MZN)')->money('MZN'),
                 TextEntry::make('payment_method'),
                 TextEntry::make('created_at')->dateTime(),
+                TextEntry::make('proof_of_payment_path')
+                    ->label('Proof of Payment')
+                    ->visible(fn (Order $record) => filled($record->proof_of_payment_path))
+                    ->formatStateUsing(fn () => 'View uploaded file')
+                    ->url(fn (Order $record) => route('admin.orders.proof-of-payment', $record))
+                    ->openUrlInNewTab(),
                 RepeatableEntry::make('orderItems')
                     ->label('Items')
                     ->schema([

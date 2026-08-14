@@ -38,6 +38,7 @@ class OrdersTable
                         OrderStatus::Failed => 'danger',
                         OrderStatus::Refunded => 'warning',
                         OrderStatus::Cancelled => 'danger',
+                        OrderStatus::Expired => 'danger',
                     }),
                 TextColumn::make('total_amount')
                     ->label('Total (MZN)')
