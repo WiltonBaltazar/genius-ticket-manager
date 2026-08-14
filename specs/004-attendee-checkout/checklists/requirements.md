@@ -31,5 +31,6 @@
 
 ## Notes
 
-- All items passed on first validation pass. No [NEEDS CLARIFICATION] markers were needed — the source description was detailed and opinionated enough (WhatsApp as a real payment option, M-Pesa deferred, staff confirmation in scope) that reasonable defaults covered every remaining ambiguity, documented in spec.md's Assumptions (inventory-hold timeout on abandoned pending orders, ticket-PDF generation timing, order-status delivery mechanism, un-confirm/refund being future scope).
-- Ready for `/speckit-clarify` or `/speckit-plan`.
+- All items passed on first validation pass. No [NEEDS CLARIFICATION] markers were needed — the source description was detailed and opinionated enough (WhatsApp as a real payment option, M-Pesa deferred, staff confirmation in scope) that reasonable defaults covered every remaining ambiguity, documented in spec.md's Assumptions (ticket-PDF generation timing, un-confirm/refund being future scope).
+- 2026-08-14 `/speckit-clarify` session: 3 real ambiguities resolved and integrated into spec.md — guest order-status access without exposing other attendees' data (FR-010a), pending-order inventory hold/expiry (FR-017/FR-018), and proof-of-payment upload via both the order-status page and the WhatsApp conversation itself (FR-008, FR-019–FR-021). All checklist items remained passing; no regressions.
+- Ready for `/speckit-plan`.

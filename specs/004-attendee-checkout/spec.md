@@ -8,6 +8,14 @@
 
 **Input**: User description: "Build the public attendee-facing ticket booking/checkout flow as a short, linear 3-step process on the React/TanStack Router public site: (1) select an event's ticket types and quantities into a cart with live availability shown, (2) enter attendee details (name, email — reusing the existing attendee account if logged in, or capturing guest details tied to an Attendee record) plus a review of the cart with a total and any fee breakdown, (3) choose a payment method and pay — M-Pesa STK push is the primary intended method per the constitution, but the Vodacom M-Pesa API isn't available yet, so WhatsApp checkout must be offered as a real, working payment option alongside M-Pesa (not just a placeholder) for this launch, in addition to the existing offline/bank-transfer payment method already in the schema. WhatsApp checkout means: the attendee's order is created in a pending state, and they're directed to message the organizer's WhatsApp number (with order details pre-filled where possible, e.g. a wa.me link) to arrange payment; a staff member then confirms the payment manually via the existing staff admin panel's order-confirmation workflow (which is itself out of scope for the existing read-only OrderResource and needs to be built as part of, or alongside, this feature). After a successful checkout, show a confirmation page with the order ID and a PDF ticket download link. The flow must prevent overselling (uses the existing ticket_types.available_quantity optimistic-locking guarantee from the core schema), must be mobile-first and fully responsive, and must carry an idempotency key on order creation to prevent duplicate orders from double-submission. This depends on and extends the already-shipped core ticketing schema (001-core-database-schema) and attendee authentication (002-attendee-auth); it does not touch the staff admin panel's existing Event/TicketType/Order resources (003-staff-admin-panel) except to add whatever staff-side payment-confirmation action is needed to actually mark a pending order as paid."
 
+## Clarifications
+
+### Session 2026-08-14
+
+- Q: How does a guest (no account) find their order-status page again after leaving it, without exposing other attendees' orders via a guessable URL? → A: Email the order-status link after submission, built from the order's existing unguessable UUID primary key; no login required to view it, no separate signed token needed.
+- Q: WhatsApp/bank-transfer are slow, manual payment methods — should a pending order that's never paid hold its reserved inventory forever, or expire? → A: Pending orders expire after a fixed 24-hour hold window; expired ones release their reserved quantity back to `available_quantity` and can no longer be paid/confirmed.
+- Q: The core schema already has an `orders.proof_of_payment_path` column — should this feature actually let attendees upload proof of payment, or leave that column unused for now? → A: Build it now, via two channels: attendees can upload proof directly on their order-status page (stored via `proof_of_payment_path`, visible to staff before confirming), AND the WhatsApp message pre-filled at checkout includes the order-status link itself, so an attendee can instead (or also) send proof-of-payment as an attachment directly in that WhatsApp conversation, which staff cross-reference manually against the linked order.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Attendee Builds a Cart from Live Availability (Priority: P1)
@@ -60,6 +68,8 @@ Having submitted a pending order, the attendee picks how they'll pay — message
 2. **Given** the attendee chooses WhatsApp, **When** the payment step renders, **Then** a link is shown that opens WhatsApp to the organizer's number with a pre-filled message including the order reference and total.
 3. **Given** the attendee chooses bank transfer, **When** the payment step renders, **Then** the organization's bank details and the order's reference/total are shown on screen for the attendee to complete manually.
 4. **Given** either payment path, **When** the attendee finishes on this step, **Then** they land on an order-status page showing the order as pending, which they can safely revisit later (e.g., from a link emailed to them) to check whether it's been confirmed.
+5. **Given** a pending order's status page, **When** the attendee uploads a proof-of-payment file, **Then** it's saved against the order and the order remains pending until a staff member separately confirms it.
+6. **Given** the WhatsApp payment path, **When** the attendee sends the pre-filled message, **Then** it includes a link to the order's status page, which the attendee can also use to send a proof-of-payment attachment directly in that WhatsApp conversation instead of (or in addition to) uploading it on the order-status page.
 
 ---
 
@@ -77,6 +87,7 @@ A staff member sees a pending order (created via User Stories 2-3), verifies the
 2. **Given** an order that is not pending (e.g., already paid, or cancelled), **When** a staff member attempts to confirm it, **Then** the action is refused.
 3. **Given** a staff member without order-confirmation permission, **When** they view a pending order, **Then** no confirm-payment action is available to them.
 4. **Given** an order just confirmed as paid, **When** the attendee revisits their order-status page, **Then** it now shows the order as paid with their ticket(s) available.
+5. **Given** a pending order with an uploaded proof-of-payment file, **When** a staff member opens that order, **Then** they can see the uploaded file before deciding whether to confirm payment.
 
 ---
 
@@ -99,11 +110,12 @@ Once an order is paid, the attendee can get a ticket for each item they bought, 
 ### Edge Cases
 
 - What happens if two attendees both try to buy the last remaining ticket of a type at nearly the same moment? (Relies on the existing oversell-prevention guarantee at the schema level — one succeeds, one is told it's no longer available before their order is created.)
-- What happens if an attendee abandons checkout after an order is created but before choosing a payment method — does the reserved inventory ever come back, or does it stay held against a pending order indefinitely?
+- What happens if an attendee abandons checkout after an order is created but before choosing a payment method, or never completes payment at all? Resolved by FR-017: the order expires 24 hours after submission and its reserved quantity is released.
 - What happens if a staff member confirms payment on an order, and then a refund/dispute happens later — is un-confirming a paid order supported, or is that a separate future workflow?
 - What happens if an attendee's chosen WhatsApp number/app isn't available on their device (e.g., desktop browser with no WhatsApp Web session)?
-- What happens if an attendee tries to re-download their PDF ticket days later, or from a different device?
-- What happens if the same guest email is used for two different orders — do they end up as two separate attendee-facing "accounts," or is there any continuity?
+- What happens if an attendee tries to re-download their PDF ticket days later, or from a different device? Resolved: the order-status page (reachable via the emailed link, FR-010a) remains accessible from any device and re-offers the same downloadable tickets for any paid order, with no expiry on ticket access itself (only pending orders expire, per FR-017).
+- What happens if the same guest email is used for two different orders — do they end up as two separate attendee-facing "accounts," or is there any continuity? Resolved by FR-004: both orders attach to the same Attendee record, matched by email, so there's continuity without a separate "account" concept.
+- A guest finds their order-status page again via the emailed link (see FR-010a) rather than logging in — what happens if that email is lost, mistyped, or never arrives?
 
 ## Requirements *(mandatory)*
 
@@ -116,20 +128,26 @@ Once an order is paid, the attendee can get a ticket for each item they bought, 
 - **FR-005**: The system MUST create an order and its line items in a pending state as soon as the attendee submits their reviewed cart, decrementing the relevant ticket types' available quantities at that moment (not deferred until payment is confirmed).
 - **FR-006**: The system MUST carry a client-generated idempotency key on order submission and MUST guarantee that retried or duplicate submissions of the same checkout attempt create at most one order.
 - **FR-007**: The system MUST offer "pay via WhatsApp" and "pay via bank transfer" as the available payment methods at checkout. M-Pesa MUST NOT be offered as a selectable payment method until its API integration exists.
-- **FR-008**: When an attendee chooses WhatsApp, the system MUST provide a working link that opens WhatsApp to the organization's configured number with a pre-filled message containing the order's reference and total.
+- **FR-008**: When an attendee chooses WhatsApp, the system MUST provide a working link that opens WhatsApp to the organization's configured number with a pre-filled message containing the order's reference, total, and a link to the order's status page — so the attendee can send proof of payment as an attachment directly in that WhatsApp conversation if they prefer, and staff can open the linked order from the conversation to cross-reference it.
 - **FR-009**: When an attendee chooses bank transfer, the system MUST display the organization's bank details alongside the order's reference and total.
 - **FR-010**: After choosing a payment method, the system MUST provide the attendee a persistent, revisitable order-status page reflecting the order's current status (pending or paid).
+- **FR-010a**: The system MUST email the attendee a link to their order-status page as soon as the order is submitted, so a guest (no account/login) can find it again without needing to stay on the original browser session; this link requires no separate token beyond the order's own identifier.
 - **FR-011**: The system MUST allow a staff member with order-confirmation permission to mark a pending order as paid, recording who confirmed it and when.
 - **FR-012**: The system MUST refuse a payment-confirmation attempt on an order that is not currently pending.
 - **FR-013**: The system MUST restrict the payment-confirmation action to staff roles already permitted to view orders under the existing admin panel's role matrix; it MUST NOT be available to roles without order-view access.
 - **FR-014**: Once an order is paid, the system MUST make one downloadable PDF ticket available per individual ticket purchased (not per line item), each showing the event name, ticket type, attendee name, and a scannable code unique to that ticket.
 - **FR-015**: The system MUST NOT offer a ticket download for any order that is not paid.
 - **FR-016**: The checkout flow MUST be a linear 3-step process — cart, details/review, payment — with no dead ends, and MUST be fully usable on both mobile and desktop.
+- **FR-017**: A pending order MUST automatically expire 24 hours after submission if it has not been confirmed paid by then; expiring an order MUST release its reserved ticket-type quantities back to `available_quantity` and MUST make the order permanently unconfirmable (a staff member can no longer mark it paid).
+- **FR-018**: The system MUST show an attendee visiting an expired order's status page a clear "this order expired" state, distinct from pending or paid.
+- **FR-019**: While an order is pending, the system MUST let the attendee upload a proof-of-payment file (e.g., a screenshot or receipt image) from the order-status page.
+- **FR-020**: The system MUST show staff any uploaded proof-of-payment file when they view a pending order, before they confirm its payment.
+- **FR-021**: Uploading proof of payment MUST NOT by itself change an order's status — confirmation remains a distinct staff action (FR-011); the upload is informational input to that decision, not an automatic trigger.
 
 ### Key Entities
 
 - **Cart**: The visitor's in-progress ticket selection prior to submitting an order — one or more (ticket type, quantity) pairs for a single event, held client-side until submission. Not persisted on its own; it becomes an Order and its Order Items only at submission.
-- **Order** *(existing, feature 001)*: A purchase attempt by an attendee. This feature is the first to actually create orders through normal use; adds no new columns, but is the first feature to write `status`, `payment_method`, `payment_reference`, and the audit fields (`confirmed_by`, `confirmed_at`) in practice.
+- **Order** *(existing, feature 001)*: A purchase attempt by an attendee. This feature is the first to actually create orders through normal use; adds no new columns, but is the first feature to write `status`, `payment_method`, `payment_reference`, `proof_of_payment_path`, and the audit fields (`confirmed_by`, `confirmed_at`) in practice.
 - **Order Item** *(existing, feature 001)*: A single ticket-type line within an order, created at submission time from the cart's contents.
 - **Ticket** *(existing, feature 001)*: One individually-identifiable ticket, issued per unit purchased once its order is paid; carries the scannable code referenced in FR-014.
 - **Attendee** *(existing, feature 001/002)*: The purchaser's identity — reused if the checkout email matches an existing record, created fresh otherwise.
@@ -150,8 +168,8 @@ Once an order is paid, the attendee can get a ticket for each item they bought, 
 - M-Pesa STK push integration is explicitly out of scope for this feature — the Vodacom M-Pesa API isn't available yet (per project context). The payment method selection is built to accommodate adding M-Pesa later without a checkout redesign, but only WhatsApp and bank-transfer are live, selectable options now.
 - "WhatsApp checkout" means directing the attendee to an external WhatsApp conversation with the organizer to arrange payment — it is not a real-time in-app payment API integration; WhatsApp itself has no payment-processing role here beyond being the communication channel.
 - The organization's WhatsApp number and bank-transfer details are configuration values (not staff-editable through this feature's UI); how they're set is an implementation detail for planning.
-- Reserved inventory for a pending order is not automatically released after any particular timeout in this feature — abandoned pending orders and their handling (expiry, release-back-to-inventory) are a future concern, not required for this launch. (See Edge Cases.)
+- Pending orders expire 24 hours after submission (FR-017), releasing their reserved inventory. This requires some process to detect and expire stale pending orders (e.g., a scheduled check) rather than only checking lazily on read — the exact mechanism is a planning-level decision, but expiry must actually happen, not just be computed on demand when someone happens to look.
 - Un-confirming a paid order, refunds, and disputes are out of scope for this feature, consistent with the staff admin panel's existing "refund/payment workflow is a future, separate feature" assumption (003-staff-admin-panel). This feature adds only the pending → paid confirmation action, not the reverse.
-- Order confirmation/status updates are communicated to the attendee via the persistent order-status page URL; whether that URL is also emailed to the attendee (so they can find it again without staying logged in) is a reasonable expectation for this feature but the exact delivery mechanism is a planning-level decision.
+- Order confirmation/status updates are communicated to the attendee via the persistent order-status page URL, emailed to them at submission per FR-010a. The project already has working transactional email (feature 002's verification/password-reset emails), so no new email infrastructure is needed.
 - Ticket PDFs are generated on demand when downloaded, not pre-generated at payment-confirmation time; either approach satisfies this spec's requirements, and the choice is a planning-level decision.
 - This feature depends on 001-core-database-schema (orders/order_items/tickets/ticket_types/attendees) and 002-attendee-auth (attendee login/session) being in place, which they are. It adds a narrow payment-confirmation action to the staff admin panel (003-staff-admin-panel) but does not otherwise change that panel's existing Event/TicketType/Order resources or their policies.
