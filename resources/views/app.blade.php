@@ -9,5 +9,20 @@
 </head>
 <body>
     <div id="root"></div>
+    {{-- 004-attendee-checkout: static payment config the payment step needs
+         client-side (WhatsApp number, bank details) — Js::from() safely
+         escapes this for inline embedding (Laravel's recommended pattern for
+         passing server data into JS, guards against </script> breakout). --}}
+    <script>
+        window.__CHECKOUT_CONFIG__ = {{ Illuminate\Support\Js::from([
+            'whatsappNumber' => config('services.whatsapp.number'),
+            'bankTransfer' => [
+                'accountName' => config('services.bank_transfer.account_name'),
+                'accountNumber' => config('services.bank_transfer.account_number'),
+                'bankName' => config('services.bank_transfer.bank_name'),
+                'branch' => config('services.bank_transfer.branch'),
+            ],
+        ]) }};
+    </script>
 </body>
 </html>

@@ -3,13 +3,60 @@
 namespace App\Http\Controllers\Checkout;
 
 use App\Actions\Checkout\SubmitOrderAction;
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Checkout\SubmitOrderRequest;
+use App\Models\Order;
 use App\Notifications\Orders\OrderStatusLink;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class OrderController extends Controller
 {
+    /**
+     * Dual-purpose, same pattern as EventCheckoutController::show — SPA shell
+     * for a browser navigation (e.g. the emailed order-status link), JSON for
+     * the app's own fetch() call to the same URL.
+     */
+    public function show(Request $request, Order $order): Response
+    {
+        if (! $request->expectsJson()) {
+            return response(view('app'));
+        }
+
+        $order->load(['orderItems.ticketType', 'tickets']);
+
+        $payload = [
+            'id' => $order->id,
+            'status' => $order->status->value,
+            'total_amount' => (string) $order->total_amount,
+            'payment_method' => $order->payment_method?->value,
+            'created_at' => $order->created_at,
+            'proof_of_payment_uploaded' => $order->proof_of_payment_path !== null,
+            'items' => $order->orderItems->map(fn ($item) => [
+                'ticket_type_name' => $item->ticketType->name,
+                'quantity' => $item->quantity,
+                'unit_price' => (string) $item->unit_price,
+                'subtotal' => (string) $item->subtotal,
+            ]),
+            'tickets' => $order->status === OrderStatus::Paid
+                ? $order->tickets->map(fn ($ticket) => [
+                    'id' => $ticket->id,
+                    'pdf_url' => "/orders/{$order->id}/tickets/{$ticket->id}/pdf",
+                ])
+                : [],
+        ];
+
+        // expires_at is omitted entirely (not set to null) for a non-pending order —
+        // its presence/absence is the signal the frontend and tests key off.
+        if ($order->status === OrderStatus::Pending) {
+            $payload['expires_at'] = $order->created_at->copy()->addHours(24);
+        }
+
+        return response()->json(['order' => $payload]);
+    }
+
     public function store(SubmitOrderRequest $request, SubmitOrderAction $action): JsonResponse
     {
         $attendee = $request->user('web');

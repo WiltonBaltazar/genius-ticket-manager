@@ -5,6 +5,7 @@ import { loginRoute } from "./routes/auth/login";
 import { forgotPasswordRoute } from "./routes/auth/forgot-password";
 import { eventShowRoute } from "./routes/events/$slug";
 import { checkoutRoute } from "./routes/checkout";
+import { orderStatusRoute } from "./routes/orders/$orderId";
 
 const routeTree = rootRoute.addChildren([
     registerRoute,
@@ -12,6 +13,7 @@ const routeTree = rootRoute.addChildren([
     forgotPasswordRoute,
     eventShowRoute,
     checkoutRoute,
+    orderStatusRoute,
 ]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });

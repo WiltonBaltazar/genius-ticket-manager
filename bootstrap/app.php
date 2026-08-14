@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,6 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (Schedule $schedule): void {
+        // 004-attendee-checkout, research.md §3: releases inventory held by
+        // abandoned pending orders. Requires the standard Laravel scheduler
+        // cron entry (`* * * * * php artisan schedule:run`) on the server —
+        // see docs/deployment-runbook.md.
+        $schedule->command('orders:expire-pending')->everyFiveMinutes();
+    })
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust the reverse proxy this shared-hosting deployment sits behind (e.g. LiteSpeed/
         // CDN) so X-Forwarded-For is honored for the real client IP — without this, FR-012's

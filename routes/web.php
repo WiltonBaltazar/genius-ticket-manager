@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisteredAttendeeController;
 use App\Http\Controllers\Checkout\EventCheckoutController;
 use App\Http\Controllers\Checkout\OrderController;
+use App\Http\Controllers\Checkout\ProofOfPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,6 +26,13 @@ Route::get('/events/{event:slug}', [EventCheckoutController::class, 'show'])
 
 Route::post('/checkout', [OrderController::class, 'store'])
     ->name('checkout.store');
+
+// Dual-purpose, same as GET /events/{event:slug} above.
+Route::get('/orders/{order}', [OrderController::class, 'show'])
+    ->name('orders.show');
+
+Route::post('/orders/{order}/proof-of-payment', [ProofOfPaymentController::class, 'store'])
+    ->name('orders.proof-of-payment');
 
 Route::post('/register', [RegisteredAttendeeController::class, 'store'])
     ->middleware('throttle:register')

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -65,6 +66,17 @@ class Order extends Model
     public function event(): ?Event
     {
         return $this->orderItems->first()?->ticketType?->event;
+    }
+
+    /**
+     * tickets belongs to order_items, not orders directly (feature 001) — this is
+     * a convenience HasManyThrough, not a new FK, for read paths like the
+     * checkout order-status page (004-attendee-checkout) that need "every
+     * ticket on this order" without walking orderItems manually each time.
+     */
+    public function tickets(): HasManyThrough
+    {
+        return $this->hasManyThrough(Ticket::class, OrderItem::class, 'order_id', 'order_item_id');
     }
 
     public function paymentEvents(): HasMany
