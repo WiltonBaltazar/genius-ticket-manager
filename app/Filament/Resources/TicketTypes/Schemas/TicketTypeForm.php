@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TicketTypes\Schemas;
 
 use App\Models\Event;
+use App\Models\TicketType;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -39,7 +40,7 @@ class TicketTypeForm
                     // rehydrated, i.e. fresh-from-DB) state on every request, including
                     // the save request itself — this is what closes the FR-013 race, not
                     // just a one-time check at initial page load.
-                    ->disabled(fn (?\App\Models\TicketType $record) => $record && $record->available_quantity < $record->total_quantity),
+                    ->disabled(fn (?TicketType $record) => $record && $record->available_quantity < $record->total_quantity),
                 TextInput::make('available_quantity')
                     ->label('Available Quantity')
                     ->numeric()

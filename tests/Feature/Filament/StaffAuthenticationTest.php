@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StaffRole;
 use App\Models\Staff;
 use Filament\Auth\Pages\Login;
 use Livewire\Livewire;
@@ -49,7 +50,7 @@ it('re-checks role on every request: a staff member demoted to gate_operator mid
 
     $this->actingAs($staff, 'staff')->get('/admin/events')->assertOk();
 
-    $staff->update(['role' => \App\Enums\StaffRole::GateOperator]);
+    $staff->update(['role' => StaffRole::GateOperator]);
 
     $this->actingAs($staff->fresh(), 'staff')->get('/admin/events')->assertForbidden();
 });

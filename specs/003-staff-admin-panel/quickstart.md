@@ -71,7 +71,7 @@ Using `php artisan tinker`, create one `Staff` row per remaining role not alread
 ## 7. Run the automated test suite
 
 ```bash
-php artisan test --filter=StaffAdminPanel
+php artisan test tests/Feature/Filament
 ```
 
 **Expected outcome**: all pass, covering the four scenarios spec.md calls out explicitly — unauthenticated redirect to `/admin/login`, event manager can create an event, support role cannot create an event, and the general "staff login redirect when unauthenticated" case — plus the broader policy matrix in `data-model.md`'s Role → Resource access table.

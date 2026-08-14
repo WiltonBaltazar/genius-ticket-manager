@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Enums\OrderStatus;
 use App\Enums\StaffRole;
 use App\Models\Order;
+use App\Models\Staff;
 use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -13,7 +14,7 @@ class OrderStatsOverview extends StatsOverviewWidget
 {
     public static function canView(): bool
     {
-        /** @var \App\Models\Staff|null $staff */
+        /** @var Staff|null $staff */
         $staff = Filament::auth()->user();
 
         return in_array($staff?->role, [StaffRole::SuperAdmin, StaffRole::EventManager, StaffRole::Support], true);

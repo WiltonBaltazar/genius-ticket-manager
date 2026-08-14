@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\EventStatus;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Models\Event;
 use App\Models\Staff;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 
 it('lets event_manager create an event with all fields, and it appears in the events list', function () {
@@ -64,8 +67,8 @@ it('rejects a duplicate slug', function () {
 });
 
 it('filters the events list by status', function () {
-    Event::factory()->create(['status' => \App\Enums\EventStatus::Draft]);
-    Event::factory()->create(['status' => \App\Enums\EventStatus::Published]);
+    Event::factory()->create(['status' => EventStatus::Draft]);
+    Event::factory()->create(['status' => EventStatus::Published]);
 
     $staff = Staff::factory()->eventManager()->create();
 
@@ -103,7 +106,7 @@ it('rejects a hero image upload with an unsupported file type', function () {
             'venue' => 'Somewhere',
             'start_date' => now()->addMonth()->format('Y-m-d H:i:s'),
             'status' => 'draft',
-            'hero_image_path' => \Illuminate\Http\UploadedFile::fake()->create('not-an-image.pdf', 10, 'application/pdf'),
+            'hero_image_path' => UploadedFile::fake()->create('not-an-image.pdf', 10, 'application/pdf'),
         ])
         ->call('create')
         ->assertHasFormErrors(['hero_image_path']);
@@ -118,5 +121,5 @@ it('fails a stale edit with a not-found error when the event was deleted first',
     $event->forceDelete();
 
     expect(fn () => $component->call('save'))
-        ->toThrow(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        ->toThrow(ModelNotFoundException::class);
 });
