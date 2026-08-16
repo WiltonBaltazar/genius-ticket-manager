@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -47,6 +48,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (InvalidSignatureException $e, Request $request) {
             if ($request->routeIs('verification.verify')) {
                 return redirect(url('/auth/login').'?verification=failed');
+            }
+        });
+
+        // Laravel's default redirects an unauthenticated request to the `login`
+        // named route regardless of which guard rejected it — that's the
+        // attendee's POST-only /login here, not staff's. Send a 'staff'-guard
+        // rejection to Filament's own login page instead, same guard the
+        // check-in page (and admin panel) both share.
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            if (in_array('staff', $e->guards(), true) && ! $request->expectsJson()) {
+                return redirect()->guest('/admin/login');
             }
         });
     })->create();

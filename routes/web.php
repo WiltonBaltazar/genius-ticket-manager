@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CheckInController;
 use App\Http\Controllers\Admin\OrderProofOfPaymentController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -40,6 +41,15 @@ Route::post('/orders/{order}/proof-of-payment', [ProofOfPaymentController::class
 Route::get('/admin/orders/{order}/proof-of-payment-file', [OrderProofOfPaymentController::class, 'show'])
     ->middleware('auth:staff')
     ->name('admin.orders.proof-of-payment');
+
+// Dedicated door check-in page (not the attendee SPA, not Filament) — a
+// staff phone hits this directly after logging in at /admin/login, which
+// shares the same 'staff' session guard.
+Route::middleware('auth:staff')->prefix('admin/check-in')->name('admin.check-in.')->group(function () {
+    Route::get('/', [CheckInController::class, 'show'])->name('show');
+    Route::get('/lookup', [CheckInController::class, 'lookup'])->name('lookup');
+    Route::post('/tickets/{ticket}/confirm', [CheckInController::class, 'confirm'])->name('confirm');
+});
 
 Route::get('/orders/{order}/tickets/{ticket}/pdf', [TicketPdfController::class, 'show'])
     ->name('orders.tickets.pdf');

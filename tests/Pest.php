@@ -20,8 +20,9 @@ use Tests\TestCase;
 // (constitution Principle III concurrency gate). Pest doesn't support binding
 // a directory's test case and then excluding some files from it, so the "rest of
 // Feature" (Schema/ from feature 001, Auth/ from feature 002, Filament/ from
-// feature 003, Checkout/ from feature 004) is built explicitly here, excluding
-// those two files, instead of a blanket `->in('Feature')`.
+// feature 003, Checkout/ from feature 004, Admin/ from the door check-in page)
+// is built explicitly here, excluding those two files, instead of a blanket
+// `->in('Feature')`.
 $noTransactionTests = [
     __DIR__.'/Feature/Schema/TicketTypeOversellTest.php',
     __DIR__.'/Feature/Checkout/OrderSubmissionOversellTest.php',
@@ -32,6 +33,7 @@ $otherFeatureTests = array_filter(
         glob(__DIR__.'/Feature/Auth/*.php') ?: [],
         glob(__DIR__.'/Feature/Filament/*.php') ?: [],
         glob(__DIR__.'/Feature/Checkout/*.php') ?: [],
+        glob(__DIR__.'/Feature/Admin/*.php') ?: [],
     ),
     fn (string $file): bool => ! in_array($file, $noTransactionTests, true)
 );
