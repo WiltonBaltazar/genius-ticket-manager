@@ -206,7 +206,11 @@ export function TicketTypeSelector({
 
                             {isMultiDay && !soldOut && (
                                 <div
-                                    className="flex w-full flex-wrap gap-1 rounded-full bg-deep-purple/5 p-1"
+                                    // rounded-2xl, not rounded-full: this row can wrap to multiple
+                                    // lines on a narrow phone (many days), and a fully-rounded
+                                    // radius distorts into an oversized blob once the container is
+                                    // taller than one pill row.
+                                    className="flex w-full flex-wrap gap-1 rounded-2xl bg-deep-purple/5 p-1"
                                     role="group"
                                     aria-label={`Dia para ${ticketType.name}`}
                                 >

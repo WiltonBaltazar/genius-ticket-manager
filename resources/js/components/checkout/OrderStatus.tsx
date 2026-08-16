@@ -46,10 +46,15 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
                 <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
                     Pedido #{order.id.slice(0, 8).toUpperCase()}
                 </p>
-                <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    {/* whitespace-nowrap + shrink-0: a rounded-full badge with wrapped text
+                        looks broken, not just tight — if this row is ever too narrow for both
+                        the badge and the expiry text, the row should wrap as a whole (the
+                        expiry text drops to its own line) rather than the pill's own label
+                        breaking mid-word. */}
                     <span
                         role="status"
-                        className={`rounded-full px-3 py-1 font-condensed text-xs font-semibold uppercase tracking-wide ${STATUS_BADGE_CLASS[order.status]}`}
+                        className={`shrink-0 rounded-full px-3 py-1 font-condensed text-xs font-semibold whitespace-nowrap uppercase tracking-wide ${STATUS_BADGE_CLASS[order.status]}`}
                     >
                         {STATUS_LABEL[order.status]}
                     </span>

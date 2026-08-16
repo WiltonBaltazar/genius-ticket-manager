@@ -67,8 +67,11 @@ export function PaymentMethodStep({
 
     return (
         <div className="space-y-6">
+            {/* Stacks on a narrow phone, side-by-side from sm: up — "Transferência bancária"
+                doesn't fit a half-width pill below ~420px, and a rounded-full pill with
+                wrapped text looks broken rather than just tight. */}
             <div
-                className="flex gap-1 rounded-full bg-deep-purple/5 p-1"
+                className="flex flex-col gap-1 rounded-2xl bg-deep-purple/5 p-1 sm:flex-row sm:rounded-full"
                 role="group"
                 aria-label="Payment method"
             >
@@ -158,20 +161,24 @@ export function PaymentMethodStep({
                         </div>
                     </dl>
 
-                    <dl className="mt-5 flex items-center justify-between border-t border-deep-purple/10 pt-4">
+                    {/* Referência is the order's full UUID (needed for exact bank-statement
+                        reconciliation, not the truncated Pedido # shown elsewhere) — too long to
+                        share a row with Montante below ~420px without squeezing it into a
+                        broken mid-number wrap, so this stacks until there's room. */}
+                    <dl className="mt-5 flex flex-col gap-3 border-t border-deep-purple/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
                                 Referência
                             </dt>
-                            <dd className="mt-1 font-sans text-sm font-semibold text-deep-purple">
+                            <dd className="mt-1 font-sans text-sm font-semibold text-deep-purple break-all">
                                 {order.id}
                             </dd>
                         </div>
-                        <div className="text-right">
+                        <div className="sm:text-right">
                             <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
                                 Montante
                             </dt>
-                            <dd className="mt-1 font-display text-lg text-deep-purple">
+                            <dd className="mt-1 font-display text-lg whitespace-nowrap text-deep-purple">
                                 MZN {order.total_amount}
                             </dd>
                         </div>

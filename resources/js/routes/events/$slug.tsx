@@ -159,8 +159,11 @@ function EventPage() {
 
             {showCartBar && (
                 <div className="fixed inset-x-0 bottom-0 z-10 border-t border-white/10 bg-deep-purple px-6 py-4 shadow-[0_-8px_24px_rgba(0,0,0,0.15)]">
-                    <div className="mx-auto flex max-w-2xl items-center justify-between gap-4">
-                        <p className="font-sans text-sm text-white/80">
+                    <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                        {/* whitespace-nowrap: on a narrow phone this row is one gap-4 away
+                            from the button; without it, "MZN 400.00" can break mid-price
+                            instead of the row wrapping as a whole. */}
+                        <p className="font-sans text-sm whitespace-nowrap text-white/80">
                             {itemCount}{" "}
                             {itemCount === 1 ? "bilhete" : "bilhetes"}
                             <span className="mx-2 text-white/30">·</span>
