@@ -38,4 +38,13 @@ class Event extends Model
     {
         return $this->hasMany(TicketType::class);
     }
+
+    /**
+     * Whole calendar days the event spans, inclusive of both ends — the divisor
+     * for a single-day ticket's price and the range a day selection must fall in.
+     */
+    public function daysCount(): int
+    {
+        return (int) $this->start_date->copy()->startOfDay()->diffInDays($this->end_date->copy()->startOfDay()) + 1;
+    }
 }

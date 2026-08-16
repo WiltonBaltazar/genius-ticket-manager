@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class SubmitOrderAction
 {
     /**
-     * @param  array{transaction_hash: string, event_id: string, items: array<int, array{ticket_type_id: string, quantity: int}>, name?: ?string, email?: ?string, phone?: ?string, attendee?: ?Attendee, ip_address?: ?string, user_agent?: ?string}  $data
+     * @param  array{transaction_hash: string, event_id: string, items: array<int, array{ticket_type_id: string, quantity: int, event_date?: ?string}>, name?: ?string, email?: ?string, phone?: ?string, attendee?: ?Attendee, ip_address?: ?string, user_agent?: ?string}  $data
      */
     public function handle(array $data): SubmitOrderResult
     {
@@ -38,7 +38,7 @@ class SubmitOrderAction
                     // Plain read, not lockForUpdate() — research.md §2 deliberately uses
                     // optimistic locking (the conditional UPDATE below), not a pessimistic
                     // row lock, matching the pattern TicketTypeOversellTest already proved.
-                    $ticketType = TicketType::where('id', $item['ticket_type_id'])->first();
+                    $ticketType = TicketType::with('event')->where('id', $item['ticket_type_id'])->first();
 
                     $affected = TicketType::where('id', $ticketType->id)
                         ->where('version', $ticketType->version)
@@ -54,7 +54,20 @@ class SubmitOrderAction
                         continue;
                     }
 
-                    $lineItems[] = ['ticketType' => $ticketType, 'quantity' => $item['quantity']];
+                    $eventDate = $item['event_date'] ?? null;
+                    // A single day of a multi-day event costs its even share of the full
+                    // price — validated as in-range and only allowed on multi-day events
+                    // by SubmitOrderRequest::withValidator() before this ever runs.
+                    $unitPrice = $eventDate !== null
+                        ? round($ticketType->price / $ticketType->event->daysCount(), 2)
+                        : $ticketType->price;
+
+                    $lineItems[] = [
+                        'ticketType' => $ticketType,
+                        'quantity' => $item['quantity'],
+                        'eventDate' => $eventDate,
+                        'unitPrice' => $unitPrice,
+                    ];
                 }
 
                 if (! empty($shortfalls)) {
@@ -70,7 +83,7 @@ class SubmitOrderAction
                     'transaction_hash' => $data['transaction_hash'],
                     'payment_method' => PaymentMethod::Offline,
                     'total_amount' => collect($lineItems)->sum(
-                        fn (array $lineItem) => $lineItem['ticketType']->price * $lineItem['quantity']
+                        fn (array $lineItem) => $lineItem['unitPrice'] * $lineItem['quantity']
                     ),
                     'ip_address' => $data['ip_address'] ?? null,
                     'user_agent' => $data['user_agent'] ?? null,
@@ -80,9 +93,10 @@ class SubmitOrderAction
                     OrderItem::create([
                         'order_id' => $order->id,
                         'ticket_type_id' => $lineItem['ticketType']->id,
+                        'event_date' => $lineItem['eventDate'],
                         'quantity' => $lineItem['quantity'],
-                        'unit_price' => $lineItem['ticketType']->price,
-                        'subtotal' => $lineItem['ticketType']->price * $lineItem['quantity'],
+                        'unit_price' => $lineItem['unitPrice'],
+                        'subtotal' => $lineItem['unitPrice'] * $lineItem['quantity'],
                     ]);
                 }
 

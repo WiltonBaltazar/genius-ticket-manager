@@ -36,6 +36,7 @@ class ConfirmOrderPaymentAction
                     Ticket::create([
                         'order_item_id' => $item->id,
                         'ticket_type_id' => $item->ticket_type_id,
+                        'event_date' => $item->event_date,
                         'qr_code' => Str::random(48),
                         'status' => TicketStatus::Unused,
                     ]);

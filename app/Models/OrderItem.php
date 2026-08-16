@@ -15,6 +15,7 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'ticket_type_id',
+        'event_date',
         'quantity',
         'unit_price',
         'subtotal',
@@ -23,6 +24,7 @@ class OrderItem extends Model
     protected function casts(): array
     {
         return [
+            'event_date' => 'date',
             'quantity' => 'integer',
             'unit_price' => 'decimal:2',
             'subtotal' => 'decimal:2',

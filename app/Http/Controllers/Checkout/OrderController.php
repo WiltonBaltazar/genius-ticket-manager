@@ -25,7 +25,7 @@ class OrderController extends Controller
             return response(view('app'));
         }
 
-        $order->load(['orderItems.ticketType', 'tickets']);
+        $order->load(['orderItems.ticketType', 'tickets.ticketType']);
 
         $payload = [
             'id' => $order->id,
@@ -36,6 +36,7 @@ class OrderController extends Controller
             'proof_of_payment_uploaded' => $order->proof_of_payment_path !== null,
             'items' => $order->orderItems->map(fn ($item) => [
                 'ticket_type_name' => $item->ticketType->name,
+                'event_date' => $item->event_date?->toDateString(),
                 'quantity' => $item->quantity,
                 'unit_price' => (string) $item->unit_price,
                 'subtotal' => (string) $item->subtotal,
@@ -43,6 +44,8 @@ class OrderController extends Controller
             'tickets' => $order->status === OrderStatus::Paid
                 ? $order->tickets->map(fn ($ticket) => [
                     'id' => $ticket->id,
+                    'ticket_type_name' => $ticket->ticketType->name,
+                    'event_date' => $ticket->event_date?->toDateString(),
                     'pdf_url' => "/orders/{$order->id}/tickets/{$ticket->id}/pdf",
                 ])
                 : [],
@@ -103,6 +106,7 @@ class OrderController extends Controller
             'total_amount' => (string) $order->total_amount,
             'items' => $order->orderItems->map(fn ($item) => [
                 'ticket_type_id' => $item->ticket_type_id,
+                'event_date' => $item->event_date?->toDateString(),
                 'quantity' => $item->quantity,
                 'unit_price' => (string) $item->unit_price,
                 'subtotal' => (string) $item->subtotal,

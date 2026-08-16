@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Checkout;
 
+use App\Models\Event;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -31,10 +33,50 @@ class SubmitOrderRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
+            // Format only here — whether a date is even allowed (event spans >1 day)
+            // and whether it falls in range needs the event's own dates, so that
+            // check lives in withValidator() below instead.
+            'items.*.event_date' => ['nullable', 'date_format:Y-m-d'],
             'name' => [Rule::requiredIf(! $authenticated), 'nullable', 'string', 'max:255'],
             'email' => [Rule::requiredIf(! $authenticated), 'nullable', 'email:rfc'],
             'phone' => [Rule::requiredIf(! $authenticated), 'nullable', 'string', 'max:30'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $event = Event::find($this->input('event_id'));
+
+            // event_id's own exists rule already fails the request in this case —
+            // nothing more to check here.
+            if (! $event) {
+                return;
+            }
+
+            $daysCount = $event->daysCount();
+            $firstDay = $event->start_date->toDateString();
+            $lastDay = $event->end_date->toDateString();
+
+            foreach ($this->input('items', []) as $index => $item) {
+                $eventDate = $item['event_date'] ?? null;
+                if ($eventDate === null) {
+                    continue;
+                }
+
+                if ($daysCount <= 1) {
+                    $validator->errors()->add(
+                        "items.{$index}.event_date",
+                        'Este evento não tem múltiplos dias.'
+                    );
+                } elseif ($eventDate < $firstDay || $eventDate > $lastDay) {
+                    $validator->errors()->add(
+                        "items.{$index}.event_date",
+                        'Data fora do período do evento.'
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -54,6 +96,7 @@ class SubmitOrderRequest extends FormRequest
             'phone.required' => 'O número de telefone é obrigatório.',
             'items.required' => 'Adicione pelo menos um bilhete ao carrinho.',
             'items.min' => 'Adicione pelo menos um bilhete ao carrinho.',
+            'items.*.event_date.date_format' => 'Data inválida.',
         ];
     }
 }

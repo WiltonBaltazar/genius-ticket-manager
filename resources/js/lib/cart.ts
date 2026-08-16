@@ -9,11 +9,17 @@ import {
 } from "react";
 import { createElement } from "react";
 
+/**
+ * A purchasable variant of a ticket type: the full event pass (eventDate: null)
+ * or one specific day of a multi-day event, at that day's own (already-divided)
+ * price. Two variants of the same ticket type share one availableQuantity pool.
+ */
 export type CartTicketType = {
     id: string;
     name: string;
     price: string;
     availableQuantity: number;
+    eventDate: string | null;
 };
 
 export type CartItem = {
@@ -54,10 +60,14 @@ function writeStoredCart(cart: CartState | null): void {
 type CartContextValue = {
     eventId: string | null;
     items: CartItem[];
-    /** Adds 1 of a ticket type, clamped to its availableQuantity. Starting a cart for a different event clears any existing cart (an order can only span one event's ticket types). */
+    /** Adds 1 of a ticket type variant (full pass or a specific day), clamped to the shared availableQuantity across all of that ticket type's variants already in the cart. Starting a cart for a different event clears any existing cart (an order can only span one event's ticket types). */
     add: (eventId: string, eventSlug: string, ticketType: CartTicketType) => void;
-    setQuantity: (ticketTypeId: string, quantity: number) => void;
-    remove: (ticketTypeId: string) => void;
+    setQuantity: (
+        ticketTypeId: string,
+        quantity: number,
+        eventDate?: string | null,
+    ) => void;
+    remove: (ticketTypeId: string, eventDate?: string | null) => void;
     clear: () => void;
     total: number;
 };
@@ -79,26 +89,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
                         ? prev
                         : { eventId, eventSlug, items: [] };
 
-                const existing = base.items.find(
-                    (item) => item.ticketType.id === ticketType.id,
-                );
-                const currentQuantity = existing?.quantity ?? 0;
-                const nextQuantity = Math.min(
-                    currentQuantity + 1,
-                    ticketType.availableQuantity,
-                );
+                // All variants (full pass, each day) of a ticket type draw from
+                // the same shared availableQuantity pool.
+                const totalForType = base.items
+                    .filter((item) => item.ticketType.id === ticketType.id)
+                    .reduce((sum, item) => sum + item.quantity, 0);
 
-                if (nextQuantity === currentQuantity) {
+                if (totalForType >= ticketType.availableQuantity) {
                     return base; // already at the availability ceiling
                 }
 
+                const existing = base.items.find(
+                    (item) =>
+                        item.ticketType.id === ticketType.id &&
+                        item.ticketType.eventDate === ticketType.eventDate,
+                );
+
                 const items = existing
                     ? base.items.map((item) =>
-                          item.ticketType.id === ticketType.id
-                              ? { ...item, quantity: nextQuantity }
+                          item === existing
+                              ? { ...item, quantity: item.quantity + 1 }
                               : item,
                       )
-                    : [...base.items, { ticketType, quantity: nextQuantity }];
+                    : [...base.items, { ticketType, quantity: 1 }];
 
                 return { ...base, items };
             });
@@ -106,37 +119,72 @@ export function CartProvider({ children }: { children: ReactNode }) {
         [],
     );
 
-    const setQuantity = useCallback((ticketTypeId: string, quantity: number) => {
-        setCart((prev) => {
-            if (!prev) return prev;
+    const setQuantity = useCallback(
+        (
+            ticketTypeId: string,
+            quantity: number,
+            eventDate: string | null = null,
+        ) => {
+            setCart((prev) => {
+                if (!prev) return prev;
 
-            const items = prev.items
-                .map((item) => {
-                    if (item.ticketType.id !== ticketTypeId) return item;
-                    const clamped = Math.max(
-                        0,
-                        Math.min(quantity, item.ticketType.availableQuantity),
-                    );
-                    return { ...item, quantity: clamped };
-                })
-                .filter((item) => item.quantity > 0);
+                const target = prev.items.find(
+                    (item) =>
+                        item.ticketType.id === ticketTypeId &&
+                        item.ticketType.eventDate === eventDate,
+                );
+                if (!target) return prev;
 
-            return { ...prev, items };
-        });
-    }, []);
+                const otherQuantityForType = prev.items
+                    .filter(
+                        (item) =>
+                            item.ticketType.id === ticketTypeId &&
+                            item !== target,
+                    )
+                    .reduce((sum, item) => sum + item.quantity, 0);
 
-    const remove = useCallback((ticketTypeId: string) => {
-        setCart((prev) =>
-            prev
-                ? {
-                      ...prev,
-                      items: prev.items.filter(
-                          (item) => item.ticketType.id !== ticketTypeId,
-                      ),
-                  }
-                : prev,
-        );
-    }, []);
+                const clamped = Math.max(
+                    0,
+                    Math.min(
+                        quantity,
+                        target.ticketType.availableQuantity -
+                            otherQuantityForType,
+                    ),
+                );
+
+                const items = prev.items
+                    .map((item) =>
+                        item === target
+                            ? { ...item, quantity: clamped }
+                            : item,
+                    )
+                    .filter((item) => item.quantity > 0);
+
+                return { ...prev, items };
+            });
+        },
+        [],
+    );
+
+    const remove = useCallback(
+        (ticketTypeId: string, eventDate: string | null = null) => {
+            setCart((prev) =>
+                prev
+                    ? {
+                          ...prev,
+                          items: prev.items.filter(
+                              (item) =>
+                                  !(
+                                      item.ticketType.id === ticketTypeId &&
+                                      item.ticketType.eventDate === eventDate
+                                  ),
+                          ),
+                      }
+                    : prev,
+            );
+        },
+        [],
+    );
 
     const clear = useCallback(() => setCart(null), []);
 

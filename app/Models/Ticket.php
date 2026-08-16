@@ -17,6 +17,7 @@ class Ticket extends Model
     protected $fillable = [
         'order_item_id',
         'ticket_type_id',
+        'event_date',
         'qr_code',
         'status',
         'checked_in_at',
@@ -26,6 +27,7 @@ class Ticket extends Model
     protected function casts(): array
     {
         return [
+            'event_date' => 'date',
             'status' => TicketStatus::class,
             'checked_in_at' => 'datetime',
         ];

@@ -20,6 +20,7 @@ type EventDetail = {
 type TicketTypePayload = {
     id: string;
     name: string;
+    description: string | null;
     price: string;
     available_quantity: number;
 };
@@ -70,66 +71,114 @@ function HomePage() {
         cart.eventId === event.id && cart.items.length > 0;
 
     return (
-        <div className="mx-auto max-w-2xl px-6 py-12">
-            <img
-                src="/images/logo.png"
-                alt="Genius Behind the Brands"
-                className="mb-8 h-auto w-40"
-            />
-
-            {event.hero_image_url && (
+        <div className="min-h-screen bg-white font-sans text-deep-purple">
+            <header className="border-b border-deep-purple/10 px-6 py-4">
                 <img
-                    src={event.hero_image_url}
-                    alt=""
-                    className="mb-6 aspect-[16/9] w-full rounded-lg object-cover"
+                    src="/images/logo.png"
+                    alt="Genius Behind the Brands"
+                    className="h-9 w-auto"
                 />
-            )}
+            </header>
 
-            <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
-                {new Date(event.start_date).toLocaleDateString("pt", {
-                    dateStyle: "long",
-                })}
-            </p>
-            <h1 className="mt-3 font-display text-4xl text-deep-purple">
-                {event.name}
-            </h1>
-            {event.venue && (
-                <p className="mt-2 font-sans text-base text-deep-purple/70">
-                    {event.venue}
-                </p>
-            )}
-            {event.description && (
+            <section className="relative overflow-hidden bg-deep-purple">
+                {event.hero_image_url && (
+                    <img
+                        src={event.hero_image_url}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover"
+                    />
+                )}
                 <div
-                    className="mt-4 font-sans text-base leading-relaxed text-deep-purple/70"
-                    dangerouslySetInnerHTML={{ __html: event.description }}
+                    aria-hidden="true"
+                    className={
+                        event.hero_image_url
+                            ? "absolute inset-0 bg-gradient-to-t from-deep-purple via-deep-purple/75 to-deep-purple/25"
+                            : "absolute inset-0 opacity-[0.07]"
+                    }
+                    style={
+                        event.hero_image_url
+                            ? undefined
+                            : {
+                                  backgroundImage:
+                                      "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+                                  backgroundSize: "22px 22px",
+                              }
+                    }
                 />
-            )}
-
-            <TicketTypeSelector
-                eventId={event.id}
-                eventSlug={event.slug}
-                ticketTypes={data.ticket_types.map((tt) => ({
-                    id: tt.id,
-                    name: tt.name,
-                    price: tt.price,
-                    availableQuantity: tt.available_quantity,
-                }))}
-            />
-
-            {inCartForThisEvent && (
-                <div className="mt-8 border-t border-deep-purple/10 pt-8">
-                    <h2 className="font-display text-2xl text-deep-purple">
-                        Os seus dados
-                    </h2>
-                    <div className="mt-6">
-                        <CheckoutDetailsForm
-                            onSubmitted={(orderId) =>
-                                navigate({ to: `/orders/${orderId}` })
-                            }
-                        />
-                    </div>
+                <div className="relative mx-auto max-w-2xl px-6 py-16 sm:py-24">
+                    <p className="font-condensed text-xs font-semibold uppercase tracking-[0.35em] text-gold">
+                        {new Date(event.start_date).toLocaleDateString("pt", {
+                            dateStyle: "long",
+                        })}
+                    </p>
+                    <h1 className="mt-4 font-display text-4xl leading-[1.1] text-white sm:text-5xl">
+                        {event.name}
+                    </h1>
+                    {event.venue && (
+                        <p className="mt-4 font-sans text-base text-white/75">
+                            {event.venue}
+                        </p>
+                    )}
                 </div>
-            )}
+            </section>
+
+            <div className="mx-auto max-w-2xl px-6 py-12">
+                {event.description && (
+                    <>
+                        <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
+                            Sobre o evento
+                        </p>
+                        <div
+                            className="mt-3 font-sans text-base leading-relaxed text-deep-purple/70"
+                            dangerouslySetInnerHTML={{
+                                __html: event.description,
+                            }}
+                        />
+                    </>
+                )}
+
+                <div className="mt-12">
+                    <div className="flex items-baseline justify-between border-b border-deep-purple/10 pb-3">
+                        <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-deep-purple">
+                            Bilhetes
+                        </p>
+                    </div>
+
+                    <TicketTypeSelector
+                        eventId={event.id}
+                        eventSlug={event.slug}
+                        event={{
+                            startDate: event.start_date,
+                            endDate: event.end_date,
+                        }}
+                        ticketTypes={data.ticket_types.map((tt) => ({
+                            id: tt.id,
+                            name: tt.name,
+                            description: tt.description,
+                            price: tt.price,
+                            availableQuantity: tt.available_quantity,
+                        }))}
+                    />
+                </div>
+
+                {inCartForThisEvent && (
+                    <div className="mt-12 border-t border-deep-purple/10 pt-10">
+                        <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
+                            Último passo
+                        </p>
+                        <h2 className="mt-3 font-display text-3xl text-deep-purple">
+                            Os seus dados
+                        </h2>
+                        <div className="mt-6">
+                            <CheckoutDetailsForm
+                                onSubmitted={(orderId) =>
+                                    navigate({ to: `/orders/${orderId}` })
+                                }
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

@@ -49,6 +49,7 @@ export function CheckoutDetailsForm({
                 event_id: cart.eventId,
                 items: cart.items.map((item) => ({
                     ticket_type_id: item.ticketType.id,
+                    event_date: item.ticketType.eventDate,
                     quantity: item.quantity,
                 })),
                 name: loggedIn ? null : name,
@@ -97,11 +98,24 @@ export function CheckoutDetailsForm({
             <ul className="divide-y divide-deep-purple/10 rounded-md border border-deep-purple/10">
                 {cart.items.map((item) => (
                     <li
-                        key={item.ticketType.id}
+                        key={`${item.ticketType.id}:${item.ticketType.eventDate ?? "full"}`}
                         className="flex items-center justify-between px-4 py-3 font-sans text-sm text-deep-purple"
                     >
                         <span>
                             {item.quantity} × {item.ticketType.name}
+                            {item.ticketType.eventDate && (
+                                <span className="text-deep-purple/50">
+                                    {" "}
+                                    (
+                                    {new Date(
+                                        `${item.ticketType.eventDate}T00:00:00`,
+                                    ).toLocaleDateString("pt", {
+                                        day: "2-digit",
+                                        month: "short",
+                                    })}
+                                    )
+                                </span>
+                            )}
                         </span>
                         <span>
                             MZN{" "}
@@ -164,7 +178,7 @@ export function CheckoutDetailsForm({
             <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-md bg-deep-purple px-4 py-3 font-condensed text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full bg-deep-purple px-4 py-3 font-condensed text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
                 {submitting ? "A enviar…" : "Enviar pedido"}
             </button>

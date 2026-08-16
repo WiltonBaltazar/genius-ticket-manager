@@ -33,6 +33,27 @@ it('downloads a PDF for a ticket on a paid order', function () {
     expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
 });
 
+it('downloads a PDF for a single-day ticket on a multi-day event', function () {
+    $event = Event::factory()->twoDay()->create(['name' => 'Annual Gala']);
+    $ticketType = TicketType::factory()->for($event)->create(['name' => 'VIP Pass']);
+    $order = Order::factory()->pending()->create();
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'ticket_type_id' => $ticketType->id,
+        'event_date' => $event->end_date->toDateString(),
+        'quantity' => 1,
+    ]);
+
+    $staff = Staff::factory()->eventManager()->create();
+    $confirmed = app(ConfirmOrderPaymentAction::class)->handle($order, $staff);
+    $ticket = $confirmed->tickets->first();
+
+    $response = $this->get("/orders/{$confirmed->id}/tickets/{$ticket->id}/pdf");
+
+    $response->assertOk();
+    expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
+});
+
 it('returns 404 for a ticket on a pending order', function () {
     $event = Event::factory()->create();
     $ticketType = TicketType::factory()->for($event)->create();

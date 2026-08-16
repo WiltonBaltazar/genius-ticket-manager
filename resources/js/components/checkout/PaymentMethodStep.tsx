@@ -67,35 +67,39 @@ export function PaymentMethodStep({
 
     return (
         <div className="space-y-6">
-            <div className="flex gap-2" role="group" aria-label="Payment method">
+            <div
+                className="flex gap-1 rounded-full bg-deep-purple/5 p-1"
+                role="group"
+                aria-label="Payment method"
+            >
                 <button
                     type="button"
                     aria-pressed={method === "whatsapp"}
                     onClick={() => setMethod("whatsapp")}
-                    className={`flex-1 rounded-md border px-4 py-2 font-condensed text-sm font-semibold uppercase tracking-wide ${
+                    className={`flex-1 rounded-full px-4 py-2 font-condensed text-xs font-semibold uppercase tracking-wide transition-colors ${
                         method === "whatsapp"
-                            ? "border-deep-purple bg-deep-purple text-white"
-                            : "border-deep-purple/20 text-deep-purple"
+                            ? "bg-white text-deep-purple shadow-sm"
+                            : "text-deep-purple/50"
                     }`}
                 >
-                    Pagar via WhatsApp
+                    WhatsApp
                 </button>
                 <button
                     type="button"
                     aria-pressed={method === "bank"}
                     onClick={() => setMethod("bank")}
-                    className={`flex-1 rounded-md border px-4 py-2 font-condensed text-sm font-semibold uppercase tracking-wide ${
+                    className={`flex-1 rounded-full px-4 py-2 font-condensed text-xs font-semibold uppercase tracking-wide transition-colors ${
                         method === "bank"
-                            ? "border-deep-purple bg-deep-purple text-white"
-                            : "border-deep-purple/20 text-deep-purple"
+                            ? "bg-white text-deep-purple shadow-sm"
+                            : "text-deep-purple/50"
                     }`}
                 >
-                    Pagar por transferência bancária
+                    Transferência bancária
                 </button>
             </div>
 
             {method === "whatsapp" ? (
-                <div className="rounded-md border border-deep-purple/10 p-4">
+                <div className="rounded-lg border border-deep-purple/10 p-5">
                     <p className="font-sans text-sm text-deep-purple/70">
                         Envie-nos uma mensagem no WhatsApp para combinar o
                         pagamento — a referência do pedido e o total já estão
@@ -106,7 +110,7 @@ export function PaymentMethodStep({
                             href={waLink}
                             target="_blank"
                             rel="noreferrer"
-                            className="mt-4 block w-full rounded-md bg-deep-purple px-4 py-3 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white hover:bg-gold hover:text-deep-purple"
+                            className="mt-4 block w-full rounded-full bg-deep-purple px-4 py-3 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple"
                         >
                             Abrir WhatsApp
                         </a>
@@ -118,42 +122,70 @@ export function PaymentMethodStep({
                     )}
                 </div>
             ) : (
-                <div className="rounded-md border border-deep-purple/10 p-4 font-sans text-sm text-deep-purple">
-                    <p>
-                        <span className="font-semibold">Nome da conta:</span>{" "}
-                        {bankDetails.accountName}
-                    </p>
-                    <p>
-                        <span className="font-semibold">
-                            Número da conta:
-                        </span>{" "}
-                        {bankDetails.accountNumber}
-                    </p>
-                    <p>
-                        <span className="font-semibold">Banco:</span>{" "}
-                        {bankDetails.bankName}
-                    </p>
-                    <p>
-                        <span className="font-semibold">Balcão:</span>{" "}
-                        {bankDetails.branch}
-                    </p>
-                    <p className="mt-3">
-                        <span className="font-semibold">Referência:</span>{" "}
-                        {order.id}
-                    </p>
-                    <p>
-                        <span className="font-semibold">Montante:</span> MZN{" "}
-                        {order.total_amount}
-                    </p>
+                <div className="rounded-lg border border-deep-purple/10 p-5">
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
+                        <div>
+                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                                Nome da conta
+                            </dt>
+                            <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
+                                {bankDetails.accountName}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                                Número da conta
+                            </dt>
+                            <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
+                                {bankDetails.accountNumber}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                                Banco
+                            </dt>
+                            <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
+                                {bankDetails.bankName}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                                Balcão
+                            </dt>
+                            <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
+                                {bankDetails.branch}
+                            </dd>
+                        </div>
+                    </dl>
+
+                    <dl className="mt-5 flex items-center justify-between border-t border-deep-purple/10 pt-4">
+                        <div>
+                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                                Referência
+                            </dt>
+                            <dd className="mt-1 font-sans text-sm font-semibold text-deep-purple">
+                                {order.id}
+                            </dd>
+                        </div>
+                        <div className="text-right">
+                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                                Montante
+                            </dt>
+                            <dd className="mt-1 font-display text-lg text-deep-purple">
+                                MZN {order.total_amount}
+                            </dd>
+                        </div>
+                    </dl>
+
                     {bankDetails.instructions && (
-                        <p className="mt-3 whitespace-pre-line text-deep-purple/70">
+                        <p className="mt-4 whitespace-pre-line font-sans text-sm text-deep-purple/70">
                             {bankDetails.instructions}
                         </p>
                     )}
                 </div>
             )}
 
-            <div>
+            <div className="rounded-lg border border-dashed border-deep-purple/25 p-5">
                 <label
                     htmlFor="proof-of-payment"
                     className="font-condensed text-xs font-semibold uppercase tracking-wide text-deep-purple"
@@ -169,32 +201,32 @@ export function PaymentMethodStep({
                     accept="image/jpeg,image/png,application/pdf"
                     disabled={uploading}
                     onChange={handleFileChange}
-                    className="mt-2 block w-full font-sans text-sm text-deep-purple"
+                    className="mt-3 block w-full font-sans text-sm text-deep-purple/70 file:mr-3 file:rounded-full file:border-0 file:bg-deep-purple/5 file:px-4 file:py-2 file:font-condensed file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-deep-purple"
                 />
                 <button
                     type="button"
                     onClick={handleSubmit}
                     disabled={!selectedFile || uploading}
-                    className="mt-3 rounded-md bg-deep-purple px-4 py-2 font-condensed text-sm font-semibold uppercase tracking-wide text-white hover:bg-gold hover:text-deep-purple disabled:cursor-not-allowed disabled:opacity-40"
+                    className="mt-4 rounded-full bg-deep-purple px-5 py-2 font-condensed text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     {uploading ? "A enviar…" : "Enviar comprovativo"}
                 </button>
                 {justUploaded && (
                     <p
                         role="status"
-                        className="mt-2 font-sans text-xs font-medium text-green-700"
+                        className="mt-3 font-sans text-xs font-medium text-green-700"
                     >
                         Comprovativo enviado — a nossa equipa irá analisá-lo
                         em breve.
                     </p>
                 )}
                 {!justUploaded && order.proof_of_payment_uploaded && (
-                    <p className="mt-1 font-sans text-xs text-deep-purple/50">
+                    <p className="mt-2 font-sans text-xs text-deep-purple/50">
                         Recebido — a nossa equipa irá analisá-lo em breve.
                     </p>
                 )}
                 {uploadError && (
-                    <p role="alert" className="mt-1 font-sans text-xs text-red-text">
+                    <p role="alert" className="mt-2 font-sans text-xs text-red-text">
                         {uploadError}
                     </p>
                 )}

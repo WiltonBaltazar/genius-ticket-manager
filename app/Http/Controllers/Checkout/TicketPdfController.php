@@ -25,17 +25,39 @@ class TicketPdfController extends Controller
         $qrCode = (new Builder(
             writer: new PngWriter,
             data: $ticket->qr_code,
-            size: 300,
-            margin: 10,
+            size: 620,
+            margin: 24,
         ))->build();
 
         return Pdf::loadView('tickets.pdf', [
+            'order' => $order,
             'event' => $event,
             'ticketType' => $ticketType,
             'ticket' => $ticket,
             'attendeeName' => $attendeeName,
             'qrCodeBase64' => base64_encode($qrCode->getString()),
             'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
+            'fonts' => $this->fontsBase64(),
         ])->download("ticket-{$ticket->id}.pdf");
+    }
+
+    /**
+     * The ticket PDF is a fixed 1080×1920 canvas rendered standalone per request (no browser,
+     * no CDN reachable at generation time), so brand fonts are vendored under resources/fonts
+     * and inlined as data URIs rather than loaded from Bunny Fonts like the web app does.
+     *
+     * @return array<string, string>
+     */
+    private function fontsBase64(): array
+    {
+        $dir = resource_path('fonts/tickets');
+
+        return collect([
+            'displayBold' => 'PlayfairDisplay-Bold.ttf',
+            'sansRegular' => 'Barlow-Regular.ttf',
+            'sansSemibold' => 'Barlow-SemiBold.ttf',
+            'condensedSemibold' => 'BarlowCondensed-SemiBold.ttf',
+            'condensedBold' => 'BarlowCondensed-Bold.ttf',
+        ])->map(fn ($file) => base64_encode(file_get_contents("{$dir}/{$file}")))->all();
     }
 }
