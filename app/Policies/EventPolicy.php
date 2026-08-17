@@ -33,6 +33,16 @@ class EventPolicy
         return $staff->role === StaffRole::SuperAdmin;
     }
 
+    /**
+     * The attendee list export contains attendee PII (email, phone) — same
+     * role set as viewing/editing the event itself, not the wider orders-access
+     * set (Support), since this is an organizer tool, not payment handling.
+     */
+    public function exportAttendees(Staff $staff, Event $event): bool
+    {
+        return $this->hasEventsAccess($staff);
+    }
+
     private function hasEventsAccess(Staff $staff): bool
     {
         return in_array($staff->role, [StaffRole::SuperAdmin, StaffRole::EventManager], true);

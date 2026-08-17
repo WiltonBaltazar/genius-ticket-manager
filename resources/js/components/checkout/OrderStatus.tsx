@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { TicketTransferForm } from "./TicketTransferForm";
+
 type OrderPayload = {
     id: string;
     status: "pending" | "paid" | "expired";
@@ -12,9 +15,12 @@ type OrderPayload = {
     }[];
     tickets: {
         id: string;
+        status: "unused" | "checked_in" | "voided";
         ticket_type_name: string;
         event_date: string | null;
+        holder_name: string;
         pdf_url: string;
+        transfer_url: string;
     }[];
 };
 
@@ -39,7 +45,15 @@ const STATUS_BADGE_CLASS: Record<OrderPayload["status"], string> = {
 };
 
 /** Renders an order's pending/paid/expired states distinctly, as a single ticket-shaped card (spec.md FR-018, User Stories 3-5). */
-export function OrderStatus({ order }: { order: OrderPayload }) {
+export function OrderStatus({
+    order,
+    onTicketTransferred,
+}: {
+    order: OrderPayload;
+    onTicketTransferred: () => void;
+}) {
+    const [transferringId, setTransferringId] = useState<string | null>(null);
+
     return (
         <div className="overflow-hidden rounded-2xl border border-deep-purple/10 shadow-sm">
             <div className="relative bg-deep-purple px-6 py-5">
@@ -132,10 +146,13 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
                         </p>
                         <ul className="mt-3 space-y-2">
                             {order.tickets.map((ticket, i) => (
-                                <li key={ticket.id}>
+                                <li
+                                    key={ticket.id}
+                                    className="overflow-hidden rounded-lg border border-deep-purple/20"
+                                >
                                     <a
                                         href={ticket.pdf_url}
-                                        className="flex items-center overflow-hidden rounded-lg border border-deep-purple/20 transition-colors hover:border-gold"
+                                        className="flex items-center transition-colors hover:border-gold"
                                     >
                                         <span
                                             aria-hidden="true"
@@ -151,27 +168,60 @@ export function OrderStatus({ order }: { order: OrderPayload }) {
                                             )}
                                         </span>
                                         <span className="flex flex-1 items-center justify-between px-4 py-3">
-                                            <span className="font-sans text-sm font-semibold text-deep-purple">
-                                                Bilhete {i + 1} ·{" "}
-                                                {ticket.ticket_type_name}
-                                                {dayLabel(
-                                                    ticket.event_date,
-                                                ) && (
-                                                    <span className="text-deep-purple/50">
-                                                        {" "}
-                                                        (
-                                                        {dayLabel(
-                                                            ticket.event_date,
-                                                        )}
-                                                        )
-                                                    </span>
-                                                )}
+                                            <span>
+                                                <span className="block font-sans text-sm font-semibold text-deep-purple">
+                                                    Bilhete {i + 1} ·{" "}
+                                                    {ticket.ticket_type_name}
+                                                    {dayLabel(
+                                                        ticket.event_date,
+                                                    ) && (
+                                                        <span className="text-deep-purple/50">
+                                                            {" "}
+                                                            (
+                                                            {dayLabel(
+                                                                ticket.event_date,
+                                                            )}
+                                                            )
+                                                        </span>
+                                                    )}
+                                                </span>
+                                                <span className="block font-sans text-xs text-deep-purple/50">
+                                                    Para: {ticket.holder_name}
+                                                </span>
                                             </span>
                                             <span className="font-condensed text-xs font-semibold uppercase tracking-wide text-deep-purple/50">
                                                 PDF ↓
                                             </span>
                                         </span>
                                     </a>
+
+                                    {ticket.status === "unused" &&
+                                        (transferringId === ticket.id ? (
+                                            <TicketTransferForm
+                                                transferUrl={
+                                                    ticket.transfer_url
+                                                }
+                                                onCancel={() =>
+                                                    setTransferringId(null)
+                                                }
+                                                onTransferred={() => {
+                                                    setTransferringId(null);
+                                                    onTicketTransferred();
+                                                }}
+                                            />
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setTransferringId(
+                                                        ticket.id,
+                                                    )
+                                                }
+                                                className="w-full border-t border-dashed border-deep-purple/20 px-4 py-2 text-left font-condensed text-xs font-semibold uppercase tracking-wide text-deep-purple/50 transition-colors hover:bg-deep-purple/[0.03] hover:text-gold-hover"
+                                            >
+                                                Transferir bilhete
+                                            </button>
+                                        ))}
                                 </li>
                             ))}
                         </ul>

@@ -25,7 +25,7 @@ class OrderController extends Controller
             return response(view('app'));
         }
 
-        $order->load(['orderItems.ticketType', 'tickets.ticketType']);
+        $order->load(['orderItems.ticketType', 'tickets.ticketType', 'tickets.orderItem.order.attendee']);
 
         $payload = [
             'id' => $order->id,
@@ -44,9 +44,12 @@ class OrderController extends Controller
             'tickets' => $order->status === OrderStatus::Paid
                 ? $order->tickets->map(fn ($ticket) => [
                     'id' => $ticket->id,
+                    'status' => $ticket->status->value,
                     'ticket_type_name' => $ticket->ticketType->name,
                     'event_date' => $ticket->event_date?->toDateString(),
+                    'holder_name' => $ticket->currentHolderName(),
                     'pdf_url' => "/orders/{$order->id}/tickets/{$ticket->id}/pdf",
+                    'transfer_url' => "/orders/{$order->id}/tickets/{$ticket->id}/transfer",
                 ])
                 : [],
         ];

@@ -46,39 +46,20 @@
         <tr>
             <td align="center" style="padding: 40px 16px;">
 
-                {{-- The order-status card, echoing resources/js/components/checkout/OrderStatus.tsx:
-                     purple stub header, torn seam, white body — the site's own signature
-                     ticket-stub motif, not an invented one. Status-dependent bits (badge,
-                     headline, intro, CTA) are passed in by the calling notification so the
-                     pending and paid emails share one template instead of two near-copies. --}}
+                {{-- Echoes the ticket PDF's own header (biggest text = ticket type name)
+                     and its "Evento" + info-grid body, since this email is either handing
+                     over or confirming handover of a single physical/PDF ticket, not an
+                     order — status.blade.php's items-list shape doesn't fit here, and
+                     would leak what the original buyer paid to the new holder. --}}
                 <table role="presentation" class="gtb-card" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px;">
 
                     <tr>
                         <td bgcolor="#3C0D5F" class="gtb-px" style="background-color:#3C0D5F; border:1px solid rgba(60,13,95,0.12); border-bottom:none; border-radius:16px 16px 0 0; padding: 24px 28px 20px;">
                             <p style="margin:0; font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:12px; line-height:16px; letter-spacing:3px; text-transform:uppercase; color:#F2A801;">
-                                Pedido #{{ $orderRef }}
+                                {{ $eyebrow }}
                             </p>
-
-                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top: 12px;">
-                                <tr>
-                                    @if ($status === 'paid')
-                                        <td bgcolor="#F2A801" style="background-color:#F2A801; border-radius:999px; padding: 5px 14px;">
-                                            <span style="font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#3C0D5F;">Pago</span>
-                                        </td>
-                                    @elseif ($status === 'refunded')
-                                        <td style="background-color:rgba(255,255,255,0.15); border-radius:999px; padding: 5px 14px;">
-                                            <span style="font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.85);">Reembolsado</span>
-                                        </td>
-                                    @else
-                                        <td style="border:1px solid rgba(255,255,255,0.35); border-radius:999px; padding: 5px 14px;">
-                                            <span style="font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:11px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,0.9);">Aguarda pagamento</span>
-                                        </td>
-                                    @endif
-                                </tr>
-                            </table>
-
-                            <p class="gtb-headline" style="margin: 20px 0 0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-weight:700; font-size:28px; line-height:1.25; color:#FFFFFF;">
-                                {{ $headline }}
+                            <p class="gtb-headline" style="margin: 16px 0 0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-weight:700; font-size:32px; line-height:1.2; color:#FFFFFF;">
+                                {{ $ticketTypeName }}
                             </p>
                         </td>
                     </tr>
@@ -107,53 +88,42 @@
                     <tr>
                         <td bgcolor="#FFFFFF" class="gtb-px" style="background-color:#FFFFFF; border:1px solid rgba(60,13,95,0.12); border-top:none; border-radius:0 0 16px 16px; padding: 24px 28px 28px;">
                             <p style="margin:0 0 4px; font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; color:#3C0D5F;">
-                                Olá {{ $attendeeName }},
+                                Olá {{ $toName }},
                             </p>
                             <p style="margin:0 0 20px; font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:15px; line-height:22px; color:rgba(60,13,95,0.7);">
                                 {{ $introLine }}
                             </p>
 
-                            {{-- Nested bordered list, matching the site's own
-                                 <ul class="divide-y divide-deep-purple/10 rounded-md border border-deep-purple/10"> --}}
-                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid rgba(60,13,95,0.1); border-radius:6px;">
-                                @foreach ($items as $item)
-                                    <tr>
-                                        <td style="padding: 12px 16px; {{ ! $loop->first ? 'border-top:1px solid rgba(60,13,95,0.1);' : '' }} font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; color:#3C0D5F;">
-                                            {{ $item->quantity }} &times; {{ $item->ticketType->name }}
-                                            @if ($item->event_date)
-                                                <span style="color:rgba(60,13,95,0.5);">({{ $item->event_date->locale('pt')->translatedFormat('d \d\e F') }})</span>
-                                            @endif
-                                        </td>
-                                        <td align="right" style="padding: 12px 16px; {{ ! $loop->first ? 'border-top:1px solid rgba(60,13,95,0.1);' : '' }} font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:14px; line-height:20px; color:#3C0D5F; white-space:nowrap;">
-                                            MZN {{ number_format((float) $item->subtotal, 2) }}
-                                        </td>
-                                    </tr>
-                                @endforeach
+                            <p style="margin:0 0 6px; font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(60,13,95,0.4);">
+                                Evento
+                            </p>
+                            <p style="margin:0 0 20px; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-weight:700; font-size:22px; line-height:1.3; color:#3C0D5F;">
+                                {{ $eventName }}
+                            </p>
+
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                                 <tr>
-                                    <td style="padding: 12px 16px; border-top:1px solid rgba(60,13,95,0.1); font-family:'Barlow', Arial, Helvetica, sans-serif; font-weight:600; font-size:14px; line-height:20px; color:#3C0D5F;">
-                                        {{ $totalLabel ?? 'Total' }}
+                                    <td valign="top" width="50%" style="padding:0 8px 0 0;">
+                                        <p style="margin:0 0 4px; font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(60,13,95,0.4);">Data</p>
+                                        <p style="margin:0; font-family:'Barlow', Arial, Helvetica, sans-serif; font-weight:600; font-size:16px; color:#3C0D5F;">{{ $dateLabel }}</p>
                                     </td>
-                                    <td align="right" style="padding: 12px 16px; border-top:1px solid rgba(60,13,95,0.1); font-family:'Barlow', Arial, Helvetica, sans-serif; font-weight:600; font-size:14px; line-height:20px; color:#3C0D5F; white-space:nowrap;">
-                                        MZN {{ number_format((float) $totalAmount, 2) }}
-                                    </td>
+                                    @if ($venue)
+                                        <td valign="top" width="50%" style="padding:0 0 0 8px;">
+                                            <p style="margin:0 0 4px; font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(60,13,95,0.4);">Local</p>
+                                            <p style="margin:0; font-family:'Barlow', Arial, Helvetica, sans-serif; font-weight:600; font-size:16px; color:#3C0D5F;">{{ $venue }}</p>
+                                        </td>
+                                    @endif
                                 </tr>
                             </table>
 
-                            @if ($status === 'pending' && $expiresAt)
-                                <p style="margin: 12px 0 0; font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:12px; line-height:18px; color:rgba(60,13,95,0.5);">
-                                    Este pedido expira às {{ $expiresAt->locale('pt')->translatedFormat('H:i \d\e d \d\e F') }} — depois disso os bilhetes voltam a ficar disponíveis para outros compradores.
-                                </p>
-                            @endif
-
                             {{-- Bulletproof button: table+td background, not an <a> with padding, so Outlook
                                  renders it solid. Solid deep-purple / white text — the site's own primary-button
-                                 treatment (CheckoutDetailsForm's submit button), not an invented gold button.
-                                 Optional: a refunded order has nothing left to do, so there's no CTA. --}}
+                                 treatment. Optional: the sender's confirmation copy has nothing to click. --}}
                             @if ($ctaLabel)
                                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 28px auto 0;">
                                     <tr>
                                         <td align="center" bgcolor="#3C0D5F" style="background-color:#3C0D5F; border-radius:999px;">
-                                            <a href="{{ $orderUrl }}" target="_blank" style="display:inline-block; padding:13px 30px; font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:14px; letter-spacing:1px; text-transform:uppercase; color:#FFFFFF; text-decoration:none;">
+                                            <a href="{{ $ctaUrl }}" target="_blank" style="display:inline-block; padding:13px 30px; font-family:'Barlow Condensed', Arial, sans-serif; font-weight:600; font-size:14px; letter-spacing:1px; text-transform:uppercase; color:#FFFFFF; text-decoration:none;">
                                                 {{ $ctaLabel }}
                                             </a>
                                         </td>
@@ -161,7 +131,7 @@
                                 </table>
                             @endif
                             @if ($helperLine)
-                                <p style="margin: {{ $ctaLabel ? '14px' : '28px' }} 0 0; font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:12px; line-height:18px; color:rgba(60,13,95,0.5); text-align:center;">
+                                <p style="margin: {{ $ctaLabel ? '14px' : '24px' }} 0 0; font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:12px; line-height:18px; color:rgba(60,13,95,0.5); text-align:center;">
                                     {{ $helperLine }}
                                 </p>
                             @endif
@@ -171,7 +141,7 @@
                 </table>
 
                 <p style="margin: 24px 0 0; font-family:'Barlow', Arial, Helvetica, sans-serif; font-size:12px; line-height:18px; color:rgba(60,13,95,0.4); text-align:center;">
-                    Recebeu este e-mail porque efetuou uma compra em {{ config('app.name') }}.
+                    Recebeu este e-mail porque um bilhete foi transferido em {{ config('app.name') }}.
                 </p>
 
             </td>

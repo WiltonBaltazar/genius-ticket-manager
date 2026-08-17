@@ -19,6 +19,7 @@ export function PaymentMethodStep({
     bankDetails: {
         accountName: string | null;
         accountNumber: string | null;
+        nib: string | null;
         bankName: string | null;
         branch: string | null;
         instructions: string | null;
@@ -143,6 +144,18 @@ export function PaymentMethodStep({
                                 {bankDetails.accountNumber}
                             </dd>
                         </div>
+                        {bankDetails.nib && (
+                            // col-span-2: NIB (21 digits in MZ) is long enough to feel
+                            // cramped sharing a 2-col row — always give it the full width.
+                            <div className="col-span-2">
+                                <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                                    NIB
+                                </dt>
+                                <dd className="mt-1 font-sans text-sm font-medium text-deep-purple break-all">
+                                    {bankDetails.nib}
+                                </dd>
+                            </div>
+                        )}
                         <div>
                             <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
                                 Banco

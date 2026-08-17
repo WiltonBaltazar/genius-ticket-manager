@@ -10,6 +10,7 @@ use App\Http\Controllers\Checkout\EventCheckoutController;
 use App\Http\Controllers\Checkout\OrderController;
 use App\Http\Controllers\Checkout\ProofOfPaymentController;
 use App\Http\Controllers\Checkout\TicketPdfController;
+use App\Http\Controllers\Checkout\TicketTransferController;
 use Illuminate\Support\Facades\Route;
 
 // Dual-purpose, same as GET /events/{event:slug} below: the public landing
@@ -53,6 +54,10 @@ Route::middleware('auth:staff')->prefix('admin/check-in')->name('admin.check-in.
 
 Route::get('/orders/{order}/tickets/{ticket}/pdf', [TicketPdfController::class, 'show'])
     ->name('orders.tickets.pdf');
+
+Route::post('/orders/{order}/tickets/{ticket}/transfer', [TicketTransferController::class, 'store'])
+    ->middleware('throttle:ticket-transfer')
+    ->name('orders.tickets.transfer');
 
 Route::post('/register', [RegisteredAttendeeController::class, 'store'])
     ->middleware('throttle:register')

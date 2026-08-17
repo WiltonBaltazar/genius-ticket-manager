@@ -52,6 +52,12 @@ class CheckInController extends Controller
                 ->orWhereHas('orderItem.order', function ($order) use ($query) {
                     $order->where('id', 'like', "{$query}%");
                 })
+                // A transferred ticket's holder no longer matches the order's own
+                // attendee — search that too, or door staff can't find it by the
+                // new holder's name once it's been handed over.
+                ->orWhere('holder_name', 'like', "%{$query}%")
+                ->orWhere('holder_email', 'like', "%{$query}%")
+                ->orWhere('holder_phone', 'like', "%{$query}%")
                 ->limit(20)
                 ->get();
         } else {
@@ -86,7 +92,7 @@ class CheckInController extends Controller
         return [
             'id' => $ticket->id,
             'status' => $ticket->status->value,
-            'attendee_name' => $order->attendee->name,
+            'attendee_name' => $ticket->currentHolderName(),
             'ticket_type_name' => $ticket->ticketType->name,
             'event_name' => $ticket->ticketType->event->name,
             'event_date' => $ticket->event_date?->toDateString(),

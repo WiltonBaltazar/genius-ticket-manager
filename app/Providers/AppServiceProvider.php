@@ -33,6 +33,13 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
+        // Ticket transfer sends real email to whatever address is submitted and needs
+        // no attendee auth (order/ticket UUID is the only "authorization") — rate-limited
+        // by IP to stop it being used to spam arbitrary inboxes.
+        RateLimiter::for('ticket-transfer', function ($request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
         // The reset link is a frontend form (the SPA validates the token on submit via the
         // Password broker), not a signed backend route — no "password.reset" route exists.
         ResetPassword::createUrlUsing(function ($notifiable, string $token) {

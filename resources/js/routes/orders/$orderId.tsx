@@ -21,9 +21,12 @@ type OrderPayload = {
         }[];
         tickets: {
             id: string;
+            status: "unused" | "checked_in" | "voided";
             ticket_type_name: string;
             event_date: string | null;
+            holder_name: string;
             pdf_url: string;
+            transfer_url: string;
         }[];
     };
 };
@@ -68,7 +71,10 @@ function OrderStatusPage() {
     return (
         <div className="min-h-screen bg-white font-sans">
             <div className="mx-auto max-w-xl px-6 py-12 sm:py-16">
-                <OrderStatus order={data.order} />
+                <OrderStatus
+                    order={data.order}
+                    onTicketTransferred={reload}
+                />
 
                 {data.order.status === "pending" && (
                     <div className="mt-10">

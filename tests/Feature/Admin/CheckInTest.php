@@ -145,6 +145,38 @@ it('confirms a day-pass ticket scanned on its own day', function () {
     expect($ticket->fresh()->status)->toBe(TicketStatus::CheckedIn);
 });
 
+it('shows the transferred holder\'s name, not the order attendee\'s, once a ticket has been transferred', function () {
+    $staff = Staff::factory()->gateOperator()->create();
+    $attendee = Attendee::factory()->create(['name' => 'Maria Silva']);
+    $ticket = ticketFor($attendee, [
+        'qr_code' => 'QR-TRANSFERRED-1',
+        'holder_name' => 'Nova Pessoa',
+        'holder_email' => 'nova@example.test',
+        'transferred_at' => now(),
+    ]);
+
+    $response = $this->actingAs($staff, 'staff')->getJson('/admin/check-in/lookup?qr_code=QR-TRANSFERRED-1');
+
+    $response->assertOk();
+    $response->assertJsonPath('tickets.0.attendee_name', 'Nova Pessoa');
+});
+
+it('finds a transferred ticket by the new holder\'s name via manual search', function () {
+    $staff = Staff::factory()->gateOperator()->create();
+    $attendee = Attendee::factory()->create(['name' => 'Maria Silva']);
+    $ticket = ticketFor($attendee, [
+        'holder_name' => 'Carlos Novo',
+        'holder_email' => 'carlos@example.test',
+        'transferred_at' => now(),
+    ]);
+
+    $response = $this->actingAs($staff, 'staff')->getJson('/admin/check-in/lookup?q=Carlos');
+
+    $response->assertOk();
+    $response->assertJsonCount(1, 'tickets');
+    $response->assertJsonPath('tickets.0.id', $ticket->id);
+});
+
 it('forbids lookup and confirm for an unauthorized role', function () {
     $staff = Staff::factory()->support()->create();
     $attendee = Attendee::factory()->create();

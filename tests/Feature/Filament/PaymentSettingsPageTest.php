@@ -32,6 +32,7 @@ it('saves updated payment settings and they take effect immediately', function (
             'whatsapp_number' => '258850001111',
             'bank_account_name' => 'Genius Behind the Brands',
             'bank_account_number' => '9999999',
+            'bank_nib' => '0001 0002 12345678901 57',
             'bank_name' => 'Millennium BIM',
             'bank_branch' => 'Maputo Central',
             'bank_transfer_instructions' => 'Send proof of payment to payments@example.test or via WhatsApp.',
@@ -42,12 +43,14 @@ it('saves updated payment settings and they take effect immediately', function (
     $settings = PaymentSetting::current();
 
     expect($settings->whatsapp_number)->toBe('258850001111');
+    expect($settings->bank_nib)->toBe('0001 0002 12345678901 57');
     expect($settings->bank_transfer_instructions)->toBe('Send proof of payment to payments@example.test or via WhatsApp.');
 });
 
 it('exposes the current payment settings to the public checkout config', function () {
     PaymentSetting::current()->update([
         'whatsapp_number' => '258860002222',
+        'bank_nib' => '0001 0002 12345678901 57',
         'bank_transfer_instructions' => 'Please email your receipt to finance@example.test.',
     ]);
 
@@ -55,5 +58,6 @@ it('exposes the current payment settings to the public checkout config', functio
 
     $response->assertOk();
     $response->assertSee('258860002222');
+    $response->assertSee('0001 0002 12345678901 57');
     $response->assertSee('Please email your receipt to finance@example.test.', escape: false);
 });

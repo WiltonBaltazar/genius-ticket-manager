@@ -38,6 +38,7 @@ class PaymentSettings extends Page implements HasForms
             'whatsapp_number',
             'bank_account_name',
             'bank_account_number',
+            'bank_nib',
             'bank_name',
             'bank_branch',
             'bank_transfer_instructions',
@@ -58,6 +59,10 @@ class PaymentSettings extends Page implements HasForms
                 TextInput::make('bank_account_number')
                     ->label('Account number')
                     ->maxLength(255),
+                TextInput::make('bank_nib')
+                    ->label('NIB')
+                    ->helperText('Número de Identificação Bancária — shown to attendees alongside the account number on the bank-transfer payment step.')
+                    ->maxLength(30),
                 TextInput::make('bank_name')
                     ->label('Bank name')
                     ->maxLength(255),

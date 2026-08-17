@@ -22,6 +22,7 @@
             'bankTransfer' => [
                 'accountName' => $paymentSettings->bank_account_name,
                 'accountNumber' => $paymentSettings->bank_account_number,
+                'nib' => $paymentSettings->bank_nib,
                 'bankName' => $paymentSettings->bank_name,
                 'branch' => $paymentSettings->bank_branch,
                 'instructions' => $paymentSettings->bank_transfer_instructions,

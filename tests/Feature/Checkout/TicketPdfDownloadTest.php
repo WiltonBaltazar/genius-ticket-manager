@@ -54,6 +54,16 @@ it('downloads a PDF for a single-day ticket on a multi-day event', function () {
     expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
 });
 
+it('downloads a PDF for a transferred ticket without error', function () {
+    [$order, $ticket] = paidOrderWithOneTicket();
+    $ticket->update(['holder_name' => 'Nova Pessoa', 'holder_email' => 'nova@example.test', 'transferred_at' => now()]);
+
+    $response = $this->get("/orders/{$order->id}/tickets/{$ticket->id}/pdf");
+
+    $response->assertOk();
+    expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
+});
+
 it('returns 404 for a ticket on a pending order', function () {
     $event = Event::factory()->create();
     $ticketType = TicketType::factory()->for($event)->create();

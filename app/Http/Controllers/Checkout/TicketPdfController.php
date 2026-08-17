@@ -20,7 +20,10 @@ class TicketPdfController extends Controller
 
         $ticketType = $ticket->ticketType;
         $event = $ticketType->event;
-        $attendeeName = $order->attendee->name;
+        // Not always $order->attendee->name — a transferred ticket carries its own
+        // holder_name, since it now belongs to whoever it was transferred to, not
+        // whoever bought the order.
+        $attendeeName = $ticket->currentHolderName();
 
         $qrCode = (new Builder(
             writer: new PngWriter,

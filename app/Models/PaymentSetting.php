@@ -10,6 +10,7 @@ class PaymentSetting extends Model
         'whatsapp_number',
         'bank_account_name',
         'bank_account_number',
+        'bank_nib',
         'bank_name',
         'bank_branch',
         'bank_transfer_instructions',

@@ -7,6 +7,7 @@ declare global {
             bankTransfer: {
                 accountName: string | null;
                 accountNumber: string | null;
+                nib: string | null;
                 bankName: string | null;
                 branch: string | null;
                 instructions: string | null;

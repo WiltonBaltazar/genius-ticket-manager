@@ -42,6 +42,16 @@ class OrderPolicy
         return $this->hasOrdersAccess($staff);
     }
 
+    /**
+     * paid -> refunded, via RefundOrderAction. Same role set as
+     * confirmPayment/viewAny — this admin panel treats "orders access" as
+     * one bucket covering both directions of payment-state change.
+     */
+    public function refund(Staff $staff, Order $order): bool
+    {
+        return $this->hasOrdersAccess($staff);
+    }
+
     public function delete(Staff $staff, Order $order): bool
     {
         return false;
