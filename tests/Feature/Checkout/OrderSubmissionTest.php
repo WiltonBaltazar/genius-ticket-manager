@@ -4,6 +4,8 @@ use App\Models\Attendee;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\TicketType;
+use App\Notifications\Orders\OrderStatusLink;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 function checkoutPayload(Event $event, TicketType $ticketType, array $overrides = []): array
@@ -119,6 +121,23 @@ it('rejects a line item that exceeds current available_quantity and creates noth
     $response->assertJsonValidationErrors(['items.0.quantity']);
     expect($ticketType->fresh()->available_quantity)->toBe(3)
         ->and(Order::count())->toBe(0);
+});
+
+it('notifies the attendee by email with a link back to the pending order', function () {
+    Notification::fake();
+
+    $event = Event::factory()->create();
+    $ticketType = TicketType::factory()->for($event)->create(['total_quantity' => 10, 'available_quantity' => 10]);
+
+    $response = $this->postJson('/checkout', checkoutPayload($event, $ticketType));
+
+    $order = Order::find($response->json('order.id'));
+
+    Notification::assertSentTo(
+        $order->attendee,
+        OrderStatusLink::class,
+        fn (OrderStatusLink $notification) => $notification->toMail($order->attendee)->subject === 'Falta concluir o pagamento — '.config('app.name')
+    );
 });
 
 it('writes an AuditLog row for the created order with no staff attribution', function () {

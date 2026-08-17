@@ -208,7 +208,7 @@
             <div class="header-eyebrow-row">
                 <p class="eyebrow">Bilhete de entrada</p>
             </div>
-            <p class="ticket-type-name">{{ $ticketType->name }}</p>
+            <p class="ticket-type-name" style="font-size: {{ $ticketTypeNameFontSize }}px;">{{ $ticketType->name }}</p>
         </div>
 
         <div class="seam">
@@ -219,7 +219,7 @@
 
         <div class="body">
             <p class="eyebrow">Evento</p>
-            <p class="event-name">{{ $event->name }}</p>
+            <p class="event-name" style="font-size: {{ $eventNameFontSize }}px;">{{ $event->name }}</p>
 
             <div class="divider"></div>
 
@@ -237,17 +237,7 @@
                 <tr>
                     <td>
                         <p class="info-label">Data</p>
-                        <p class="info-value">
-                            @if($ticket->event_date)
-                                {{-- Day-pass ticket: valid for this one day of the multi-day event only. --}}
-                                {{ $ticket->event_date->locale('pt')->translatedFormat('d \d\e F') }}
-                            @else
-                                {{ $event->start_date->locale('pt')->translatedFormat('d \d\e F, H:i') }}
-                                @if($event->end_date && ! $event->end_date->isSameDay($event->start_date))
-                                    &ndash; {{ $event->end_date->locale('pt')->translatedFormat('d \d\e F') }}
-                                @endif
-                            @endif
-                        </p>
+                        <p class="info-value">{{ $event->ticketDateLabel($ticket->event_date) }}</p>
                     </td>
                     <td>
                         @if($event->venue)

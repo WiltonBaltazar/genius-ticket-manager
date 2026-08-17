@@ -7,6 +7,7 @@ use App\Enums\TicketStatus;
 use App\Models\Order;
 use App\Models\Staff;
 use App\Models\Ticket;
+use App\Notifications\Orders\OrderConfirmed;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -51,6 +52,12 @@ class ConfirmOrderPaymentAction
             ]);
         });
 
-        return $order->fresh(['tickets']);
+        $order = $order->fresh(['tickets', 'orderItems.ticketType', 'attendee']);
+
+        // Sent after the transaction commits, not inside it — a synchronous mail
+        // send is slow relative to a DB write and shouldn't hold the row lock.
+        $order->attendee->notify(new OrderConfirmed($order));
+
+        return $order;
     }
 }

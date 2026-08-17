@@ -26,10 +26,32 @@ class OrderStatusLink extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $subject = 'Falta concluir o pagamento — '.config('app.name');
+
+        $this->order->loadMissing('orderItems.ticketType');
+
+        // ->view() bypasses Laravel's default markdown mail component entirely in
+        // favor of the same branded template OrderConfirmed uses
+        // (resources/views/emails/orders/status.blade.php), just with the
+        // pending-status copy — one card design across both order emails
+        // instead of a branded one and a plain leftover one.
         return (new MailMessage)
-            ->subject('Your order — '.config('app.name'))
-            ->line('Thanks for your order! Here\'s a link to check its status and complete payment.')
-            ->action('View your order', url('/orders/'.$this->order->id))
-            ->line('Keep this link — it\'s how you\'ll come back to pay and download your ticket once confirmed.');
+            ->subject($subject)
+            ->view('emails.orders.status', [
+                'subject' => $subject,
+                'preheader' => 'Falta concluir o pagamento do seu pedido para receber os seus bilhetes.',
+                'status' => 'pending',
+                'headline' => 'Falta concluir o pagamento',
+                'introLine' => 'Recebemos o seu pedido. Complete o pagamento para receber os seus bilhetes.',
+                'ctaLabel' => 'Concluir o pagamento',
+                'helperLine' => 'Guarde este e-mail — é assim que volta a aceder ao seu pedido para pagar e descarregar o bilhete.',
+                'attendeeName' => $notifiable->name,
+                'items' => $this->order->orderItems,
+                'totalAmount' => $this->order->total_amount,
+                'expiresAt' => $this->order->created_at->copy()->addHours(24),
+                'orderUrl' => url('/orders/'.$this->order->id),
+                'orderRef' => strtoupper(substr($this->order->id, 0, 8)),
+                'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
+            ]);
     }
 }

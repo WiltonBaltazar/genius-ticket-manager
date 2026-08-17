@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Staff;
 use App\Models\TicketType;
+use App\Notifications\Orders\OrderConfirmed;
+use Illuminate\Support\Facades\Notification;
 
 it('confirms a pending order: sets paid, records who and when, and issues one ticket per unit purchased', function () {
     $staff = Staff::factory()->eventManager()->create();
@@ -51,4 +53,34 @@ it('writes an AuditLog row with the confirming staff attributed', function () {
 
     $log = $order->auditLogs()->latest()->first();
     expect($log->staff_id)->toBe($staff->id);
+});
+
+it('notifies the attendee by email once payment is confirmed', function () {
+    Notification::fake();
+
+    $staff = Staff::factory()->eventManager()->create();
+    $ticketType = TicketType::factory()->create();
+    $order = Order::factory()->pending()->create();
+    OrderItem::factory()->create(['order_id' => $order->id, 'ticket_type_id' => $ticketType->id, 'quantity' => 2]);
+
+    app(ConfirmOrderPaymentAction::class)->handle($order, $staff);
+
+    Notification::assertSentTo(
+        $order->attendee,
+        OrderConfirmed::class,
+        fn (OrderConfirmed $notification) => $notification->toMail($order->attendee)->subject === 'Os seus bilhetes estão prontos — '.config('app.name')
+    );
+});
+
+it('uses the singular subject when the order has exactly one ticket', function () {
+    $staff = Staff::factory()->eventManager()->create();
+    $ticketType = TicketType::factory()->create();
+    $order = Order::factory()->pending()->create();
+    OrderItem::factory()->create(['order_id' => $order->id, 'ticket_type_id' => $ticketType->id, 'quantity' => 1]);
+
+    $confirmed = app(ConfirmOrderPaymentAction::class)->handle($order, $staff);
+
+    $mail = (new OrderConfirmed($confirmed))->toMail($confirmed->attendee);
+
+    expect($mail->subject)->toBe('O seu bilhete está pronto — '.config('app.name'));
 });
