@@ -1,5 +1,10 @@
 export {};
 
+type MobileMoneyConfig = {
+    number: string | null;
+    name: string | null;
+};
+
 declare global {
     interface Window {
         __CHECKOUT_CONFIG__: {
@@ -12,6 +17,9 @@ declare global {
                 branch: string | null;
                 instructions: string | null;
             };
+            emola: MobileMoneyConfig;
+            mpesa: MobileMoneyConfig;
+            mkesh: MobileMoneyConfig;
         };
     }
 }

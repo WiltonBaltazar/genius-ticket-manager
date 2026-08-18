@@ -27,6 +27,18 @@
                 'branch' => $paymentSettings->bank_branch,
                 'instructions' => $paymentSettings->bank_transfer_instructions,
             ],
+            'emola' => [
+                'number' => $paymentSettings->emola_number,
+                'name' => $paymentSettings->emola_name,
+            ],
+            'mpesa' => [
+                'number' => $paymentSettings->mpesa_number,
+                'name' => $paymentSettings->mpesa_name,
+            ],
+            'mkesh' => [
+                'number' => $paymentSettings->mkesh_number,
+                'name' => $paymentSettings->mkesh_name,
+            ],
         ]) }};
     </script>
 </body>

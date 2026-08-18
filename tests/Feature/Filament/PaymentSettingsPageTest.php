@@ -36,6 +36,12 @@ it('saves updated payment settings and they take effect immediately', function (
             'bank_name' => 'Millennium BIM',
             'bank_branch' => 'Maputo Central',
             'bank_transfer_instructions' => 'Send proof of payment to payments@example.test or via WhatsApp.',
+            'emola_number' => '258870003333',
+            'emola_name' => 'Genius Behind the Brands',
+            'mpesa_number' => '258880004444',
+            'mpesa_name' => 'Genius Behind the Brands',
+            'mkesh_number' => '258890005555',
+            'mkesh_name' => 'Genius Behind the Brands',
         ])
         ->call('save')
         ->assertHasNoFormErrors();
@@ -45,6 +51,9 @@ it('saves updated payment settings and they take effect immediately', function (
     expect($settings->whatsapp_number)->toBe('258850001111');
     expect($settings->bank_nib)->toBe('0001 0002 12345678901 57');
     expect($settings->bank_transfer_instructions)->toBe('Send proof of payment to payments@example.test or via WhatsApp.');
+    expect($settings->emola_number)->toBe('258870003333');
+    expect($settings->mpesa_number)->toBe('258880004444');
+    expect($settings->mkesh_number)->toBe('258890005555');
 });
 
 it('exposes the current payment settings to the public checkout config', function () {
@@ -52,6 +61,8 @@ it('exposes the current payment settings to the public checkout config', functio
         'whatsapp_number' => '258860002222',
         'bank_nib' => '0001 0002 12345678901 57',
         'bank_transfer_instructions' => 'Please email your receipt to finance@example.test.',
+        'mpesa_number' => '258880004444',
+        'mpesa_name' => 'Genius Behind the Brands',
     ]);
 
     $response = $this->get('/auth/login');
@@ -60,4 +71,10 @@ it('exposes the current payment settings to the public checkout config', functio
     $response->assertSee('258860002222');
     $response->assertSee('0001 0002 12345678901 57');
     $response->assertSee('Please email your receipt to finance@example.test.', escape: false);
+    $response->assertSee('258880004444');
+
+    // e-mola/m-kesh were left unconfigured above — only the configured method
+    // (mpesa) should reach the checkout config, matching "only show what's
+    // been provided on the admin side."
+    $response->assertDontSee('"emola":{"number":"');
 });

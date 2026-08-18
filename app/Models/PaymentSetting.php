@@ -14,6 +14,12 @@ class PaymentSetting extends Model
         'bank_name',
         'bank_branch',
         'bank_transfer_instructions',
+        'emola_number',
+        'emola_name',
+        'mpesa_number',
+        'mpesa_name',
+        'mkesh_number',
+        'mkesh_name',
     ];
 
     /**

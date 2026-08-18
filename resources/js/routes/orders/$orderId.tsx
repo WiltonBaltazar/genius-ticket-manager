@@ -90,6 +90,9 @@ function OrderStatusPage() {
                                 bankDetails={
                                     window.__CHECKOUT_CONFIG__.bankTransfer
                                 }
+                                emola={window.__CHECKOUT_CONFIG__.emola}
+                                mpesa={window.__CHECKOUT_CONFIG__.mpesa}
+                                mkesh={window.__CHECKOUT_CONFIG__.mkesh}
                                 onUploaded={reload}
                             />
                         </div>
