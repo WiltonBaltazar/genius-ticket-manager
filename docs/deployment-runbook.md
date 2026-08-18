@@ -62,6 +62,12 @@ entry, pending orders never expire and reserved inventory is never released back
 user) and that `php artisan schedule:list` shows `orders:expire-pending` scheduled every five
 minutes.
 
+**Docker/Coolify deployment**: the above crontab entry is only needed on shared hosting. The
+`Dockerfile` in this repo runs `php artisan schedule:work` as a supervised, always-on process
+(see `docker/supervisord.conf`) instead — it ticks internally every minute, so no crontab setup
+is required there. The queue worker (`php artisan queue:work`) is supervised the same way, which
+is what actually delivers the `ShouldQueue` order/ticket-transfer/auth email notifications.
+
 ## Payment settings (WhatsApp number, bank details)
 
 The `WHATSAPP_ORGANIZER_NUMBER`/`BANK_TRANSFER_*` `.env` values only bootstrap the
