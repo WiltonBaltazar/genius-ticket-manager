@@ -299,6 +299,22 @@ export function PaymentMethodStep({
                         {bankDetails.instructions}
                     </p>
                 )}
+
+                {waLink && (
+                    <div className="mt-5 border-t border-dashed border-deep-purple/15 pt-4">
+                        <p className="font-sans text-xs text-deep-purple/60">
+                            Dúvidas sobre a transferência?{" "}
+                            <a
+                                href={waLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-semibold text-deep-purple underline decoration-deep-purple/30 underline-offset-2 transition-colors hover:text-gold-hover hover:decoration-gold-hover"
+                            >
+                                Envie-nos uma mensagem no WhatsApp
+                            </a>
+                        </p>
+                    </div>
+                )}
             </div>
         );
     } else if (method === "emola") {
