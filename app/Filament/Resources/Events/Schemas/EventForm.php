@@ -11,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Str;
 
 class EventForm
 {
@@ -20,7 +21,11 @@ class EventForm
             ->components([
                 TextInput::make('name')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn (string $operation, ?string $state, callable $set) => $operation === 'create'
+                        ? $set('slug', Str::slug($state))
+                        : null),
                 TextInput::make('slug')
                     ->required()
                     ->maxLength(255)
