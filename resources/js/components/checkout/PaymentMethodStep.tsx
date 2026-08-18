@@ -29,27 +29,85 @@ const MOBILE_MONEY_LABELS: Record<"emola" | "mpesa" | "mkesh", string> = {
     mkesh: "M-Kesh",
 };
 
-/** Referência/Montante block every non-WhatsApp method needs so the attendee sends the right amount against the right order — WhatsApp skips it since the pre-filled chat message already carries both. */
-function ReferenceAndAmount({ order }: { order: OrderSummary }) {
+function CopyIcon() {
     return (
-        <dl className="mt-5 flex flex-col gap-3 border-t border-deep-purple/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
-                    Referência
-                </dt>
-                <dd className="mt-1 font-sans text-sm font-semibold text-deep-purple break-all">
-                    {order.id}
-                </dd>
-            </div>
-            <div className="sm:text-right">
-                <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
-                    Montante
-                </dt>
-                <dd className="mt-1 font-display text-lg whitespace-nowrap text-deep-purple">
-                    MZN {order.total_amount}
-                </dd>
-            </div>
-        </dl>
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+            aria-hidden="true"
+        >
+            <rect x="8" y="8" width="12" height="12" rx="2" />
+            <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+        </svg>
+    );
+}
+
+function CheckIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4"
+            aria-hidden="true"
+        >
+            <path d="M20 6 9 17l-5-5" />
+        </svg>
+    );
+}
+
+/** Copies a payment number so it can be pasted straight into a mobile money app rather than retyped digit by digit — a real accuracy win on a step where a mistyped number sends money to the wrong account. */
+function CopyButton({ value }: { value: string }) {
+    const [copied, setCopied] = useState(false);
+
+    async function handleCopy() {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {
+            // Clipboard API unavailable (e.g. insecure context) — the number is
+            // still right there on screen to copy by hand, so this is a silent no-op.
+        }
+    }
+
+    return (
+        <button
+            type="button"
+            onClick={handleCopy}
+            aria-label={copied ? "Número copiado" : "Copiar número"}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-deep-purple/40 transition-colors hover:bg-deep-purple/5 hover:text-deep-purple"
+        >
+            {copied ? <CheckIcon /> : <CopyIcon />}
+        </button>
+    );
+}
+
+/** Leads every non-WhatsApp panel with the amount and reference — the two things that must be entered correctly in the sending app — before the account details. */
+function AmountLead({ order }: { order: OrderSummary }) {
+    return (
+        <div className="border-b border-dashed border-deep-purple/15 pb-4">
+            <p className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
+                Valor a enviar
+            </p>
+            <p className="mt-1 font-display text-3xl text-deep-purple">
+                MZN {order.total_amount}
+            </p>
+            <p className="mt-3 font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
+                Referência do pedido
+            </p>
+            <p className="mt-1 font-sans text-xs font-semibold tracking-wide text-deep-purple/70 break-all">
+                {order.id}
+            </p>
+        </div>
     );
 }
 
@@ -63,31 +121,29 @@ function MobileMoneyPanel({
     order: OrderSummary;
 }) {
     return (
-        <div className="rounded-lg border border-deep-purple/10 p-5">
-            <p className="font-sans text-sm text-deep-purple/70">
-                Envie o valor abaixo para o número {label} indicado.
-            </p>
-            <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
-                <div>
-                    <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
-                        Número
-                    </dt>
-                    <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
+        <div>
+            <AmountLead order={order} />
+            <div className="mt-4">
+                <p className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
+                    Número {label}
+                </p>
+                <div className="mt-1 flex items-center gap-1">
+                    <p className="font-sans text-xl font-semibold tracking-wide text-deep-purple">
                         {details.number}
-                    </dd>
+                    </p>
+                    {details.number && <CopyButton value={details.number} />}
                 </div>
-                {details.name && (
-                    <div>
-                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
-                            Nome registado
-                        </dt>
-                        <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
-                            {details.name}
-                        </dd>
-                    </div>
-                )}
-            </dl>
-            <ReferenceAndAmount order={order} />
+            </div>
+            {details.name && (
+                <div className="mt-4">
+                    <p className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
+                        Nome registado
+                    </p>
+                    <p className="mt-1 font-sans text-sm font-medium text-deep-purple">
+                        {details.name}
+                    </p>
+                </div>
+            )}
         </div>
     );
 }
@@ -163,7 +219,7 @@ export function PaymentMethodStep({
     let panel: ReactNode = null;
     if (method === "whatsapp") {
         panel = (
-            <div className="rounded-lg border border-deep-purple/10 p-5">
+            <div>
                 <p className="font-sans text-sm text-deep-purple/70">
                     Envie-nos uma mensagem no WhatsApp para combinar o
                     pagamento — a referência do pedido e o total já estão
@@ -181,10 +237,11 @@ export function PaymentMethodStep({
         );
     } else if (method === "bank") {
         panel = (
-            <div className="rounded-lg border border-deep-purple/10 p-5">
-                <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
+            <div>
+                <AmountLead order={order} />
+                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-4">
                     <div>
-                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
                             Nome da conta
                         </dt>
                         <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
@@ -192,27 +249,35 @@ export function PaymentMethodStep({
                         </dd>
                     </div>
                     <div>
-                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
                             Número da conta
                         </dt>
-                        <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
-                            {bankDetails.accountNumber}
+                        <dd className="mt-1 flex items-center gap-1">
+                            <span className="font-sans text-sm font-medium text-deep-purple">
+                                {bankDetails.accountNumber}
+                            </span>
+                            {bankDetails.accountNumber && (
+                                <CopyButton value={bankDetails.accountNumber} />
+                            )}
                         </dd>
                     </div>
                     {bankDetails.nib && (
                         // col-span-2: NIB (21 digits in MZ) is long enough to feel
                         // cramped sharing a 2-col row — always give it the full width.
                         <div className="col-span-2">
-                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                            <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
                                 NIB
                             </dt>
-                            <dd className="mt-1 font-sans text-sm font-medium text-deep-purple break-all">
-                                {bankDetails.nib}
+                            <dd className="mt-1 flex items-center gap-1">
+                                <span className="font-sans text-sm font-medium text-deep-purple break-all">
+                                    {bankDetails.nib}
+                                </span>
+                                <CopyButton value={bankDetails.nib} />
                             </dd>
                         </div>
                     )}
                     <div>
-                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
                             Banco
                         </dt>
                         <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
@@ -220,7 +285,7 @@ export function PaymentMethodStep({
                         </dd>
                     </div>
                     <div>
-                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-wide text-deep-purple/40">
+                        <dt className="font-condensed text-[11px] font-semibold uppercase tracking-[0.2em] text-deep-purple/40">
                             Balcão
                         </dt>
                         <dd className="mt-1 font-sans text-sm font-medium text-deep-purple">
@@ -228,8 +293,6 @@ export function PaymentMethodStep({
                         </dd>
                     </div>
                 </dl>
-
-                <ReferenceAndAmount order={order} />
 
                 {bankDetails.instructions && (
                     <p className="mt-4 whitespace-pre-line font-sans text-sm text-deep-purple/70">
@@ -248,42 +311,56 @@ export function PaymentMethodStep({
 
     return (
         <div className="space-y-6">
-            {methods.length === 0 ? (
-                <p className="font-sans text-sm text-red-text">
-                    Ainda não há nenhum método de pagamento configurado —
-                    contacte-nos diretamente para concluir o pagamento.
-                </p>
-            ) : (
-                <>
-                    {/* Stacks on a narrow phone, side-by-side from sm: up — a long label
-                        like "Transferência bancária" doesn't fit a half-width pill below
-                        ~420px, and a rounded-full pill with wrapped text looks broken
-                        rather than just tight. */}
-                    <div
-                        className="flex flex-col gap-1 rounded-2xl bg-deep-purple/5 p-1 sm:flex-row sm:flex-wrap sm:rounded-full"
-                        role="group"
-                        aria-label="Payment method"
-                    >
-                        {methods.map((m) => (
-                            <button
-                                key={m.id}
-                                type="button"
-                                aria-pressed={method === m.id}
-                                onClick={() => setMethod(m.id)}
-                                className={`flex-1 rounded-full px-4 py-2 font-condensed text-xs font-semibold uppercase tracking-wide transition-colors ${
-                                    method === m.id
-                                        ? "bg-white text-deep-purple shadow-sm"
-                                        : "text-deep-purple/50"
-                                }`}
-                            >
-                                {m.label}
-                            </button>
-                        ))}
-                    </div>
+            <div className="overflow-hidden rounded-2xl border border-deep-purple/10 shadow-sm">
+                {/* Perforated seam — this card picks up where the ticket stub above tears off. */}
+                <div aria-hidden="true" className="relative h-4 bg-deep-purple">
+                    <span className="absolute inset-x-4 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-white/20" />
+                    <span className="absolute -left-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white" />
+                    <span className="absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full bg-white" />
+                </div>
 
-                    {panel}
-                </>
-            )}
+                <div className="bg-white px-6 pt-5 pb-6">
+                    <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-deep-purple/50">
+                        Concluir pagamento
+                    </p>
+
+                    {methods.length === 0 ? (
+                        <p className="mt-4 font-sans text-sm text-red-text">
+                            Ainda não há nenhum método de pagamento
+                            configurado — contacte-nos diretamente para
+                            concluir o pagamento.
+                        </p>
+                    ) : (
+                        <>
+                            <div
+                                className="no-scrollbar mt-4 flex gap-1 overflow-x-auto border-b border-deep-purple/10"
+                                role="group"
+                                aria-label="Payment method"
+                            >
+                                {methods.map((m) => (
+                                    <button
+                                        key={m.id}
+                                        type="button"
+                                        aria-pressed={method === m.id}
+                                        onClick={() => setMethod(m.id)}
+                                        className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 font-condensed text-xs font-semibold uppercase tracking-wide transition-colors ${
+                                            method === m.id
+                                                ? "border-gold text-deep-purple"
+                                                : "border-transparent text-deep-purple/40 hover:text-deep-purple/70"
+                                        }`}
+                                    >
+                                        {m.label}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div key={method} className="payment-panel-enter mt-5">
+                                {panel}
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
 
             <div className="rounded-lg border border-dashed border-deep-purple/25 p-5">
                 <label

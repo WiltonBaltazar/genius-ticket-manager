@@ -77,25 +77,20 @@ function OrderStatusPage() {
                 />
 
                 {data.order.status === "pending" && (
-                    <div className="mt-10">
-                        <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-deep-purple">
-                            Concluir pagamento
-                        </p>
-                        <div className="mt-4">
-                            <PaymentMethodStep
-                                order={data.order}
-                                whatsappNumber={
-                                    window.__CHECKOUT_CONFIG__.whatsappNumber
-                                }
-                                bankDetails={
-                                    window.__CHECKOUT_CONFIG__.bankTransfer
-                                }
-                                emola={window.__CHECKOUT_CONFIG__.emola}
-                                mpesa={window.__CHECKOUT_CONFIG__.mpesa}
-                                mkesh={window.__CHECKOUT_CONFIG__.mkesh}
-                                onUploaded={reload}
-                            />
-                        </div>
+                    <div className="mt-6">
+                        <PaymentMethodStep
+                            order={data.order}
+                            whatsappNumber={
+                                window.__CHECKOUT_CONFIG__.whatsappNumber
+                            }
+                            bankDetails={
+                                window.__CHECKOUT_CONFIG__.bankTransfer
+                            }
+                            emola={window.__CHECKOUT_CONFIG__.emola}
+                            mpesa={window.__CHECKOUT_CONFIG__.mpesa}
+                            mkesh={window.__CHECKOUT_CONFIG__.mkesh}
+                            onUploaded={reload}
+                        />
                     </div>
                 )}
             </div>

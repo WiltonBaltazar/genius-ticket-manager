@@ -20,3 +20,31 @@
     --font-condensed: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Playfair Display', ui-serif, Georgia, serif;
 }
+
+/* Payment method panel swap (PaymentMethodStep) — a quiet settle-in, not a slide show. */
+@keyframes payment-panel-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .payment-panel-enter {
+        animation: payment-panel-in 220ms ease-out both;
+    }
+}
+
+/* Payment method tab row — scrolls on narrow phones once several methods are
+   configured, but reads as a fixed tab strip, not a visible scroll area. */
+.no-scrollbar {
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
