@@ -3,17 +3,21 @@
 namespace App\Notifications\Orders;
 
 use App\Models\Order;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Deliberately NOT ShouldQueue, matching OrderConfirmed/OrderStatusLink —
- * this project has no confirmed persistent queue worker, so this sends
- * synchronously to guarantee it's actually attempted before the refunding
- * staff member's request ends.
+ * Queued, matching OrderConfirmed/OrderStatusLink — see OrderStatusLink for
+ * why (a supervised worker now runs continuously in the Docker image, so
+ * the original "no confirmed persistent queue worker" constraint no longer
+ * applies).
  */
-class OrderRefunded extends Notification
+class OrderRefunded extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct(private readonly Order $order) {}
 
     /**

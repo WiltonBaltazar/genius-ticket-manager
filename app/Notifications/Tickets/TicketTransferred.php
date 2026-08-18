@@ -3,6 +3,8 @@
 namespace App\Notifications\Tickets;
 
 use App\Models\Ticket;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -10,11 +12,15 @@ use Illuminate\Notifications\Notification;
  * Sent to the new holder on an on-demand mail route (Notification::route),
  * not ->notify() on an Attendee — a transferred-to recipient needs no
  * account (design choice: self-service transfer, no-account recipient).
- * Deliberately NOT ShouldQueue, matching every other order/ticket
- * notification — no confirmed persistent queue worker in this project.
+ * Queued, matching every other order/ticket notification — see
+ * OrderStatusLink for why (a supervised worker now runs continuously in the
+ * Docker image, so the original "no confirmed persistent queue worker"
+ * constraint no longer applies).
  */
-class TicketTransferred extends Notification
+class TicketTransferred extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct(private readonly Ticket $ticket, private readonly string $toName, private readonly string $fromName) {}
 
     /**

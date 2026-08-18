@@ -3,17 +3,22 @@
 namespace App\Notifications\Orders;
 
 use App\Models\Order;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * Deliberately NOT ShouldQueue — a guest attendee's only way back to a
- * pending order is this link (FR-010a), and this project has no confirmed
- * persistent queue worker (research.md §3's Constraints note), so this sends
- * synchronously to guarantee it's actually attempted before the request ends.
+ * Queued via the database queue driver, supervised alongside php-fpm/nginx
+ * in the Docker image (docker/supervisord.conf) — research.md §3's original
+ * "no confirmed persistent queue worker" constraint no longer holds now that
+ * this always-on worker exists, and sending synchronously meant a transient
+ * mail failure turned an already-created order into a 500 for the attendee.
  */
-class OrderStatusLink extends Notification
+class OrderStatusLink extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct(private readonly Order $order) {}
 
     /**
