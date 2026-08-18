@@ -37,7 +37,7 @@
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFFFFF;">
         <tr>
             <td align="center" style="border-bottom: 1px solid rgba(60,13,95,0.1); padding: 18px 16px;">
-                <img src="data:image/png;base64,{{ $logoBase64 }}" alt="{{ config('app.name') }}" height="32" style="display:block; height:32px; width:auto;">
+                <img src="{{ asset('images/logo.png') }}" alt="{{ config('app.name') }}" height="32" style="display:block; height:32px; width:auto;">
             </td>
         </tr>
     </table>

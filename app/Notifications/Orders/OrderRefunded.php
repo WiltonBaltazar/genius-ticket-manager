@@ -54,7 +54,6 @@ class OrderRefunded extends Notification implements ShouldQueue
                 'totalAmount' => $this->order->total_amount,
                 'expiresAt' => null,
                 'orderRef' => strtoupper(substr($this->order->id, 0, 8)),
-                'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
             ]);
     }
 }

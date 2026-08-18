@@ -53,12 +53,6 @@ class OrderConfirmed extends Notification implements ShouldQueue
                 'expiresAt' => null,
                 'orderUrl' => url('/orders/'.$this->order->id),
                 'orderRef' => strtoupper(substr($this->order->id, 0, 8)),
-                // Embedded as a data URI, not asset()/url() — an emailed <img src>
-                // pointing at APP_URL (often http://localhost in dev, and blocked by
-                // some mail clients' remote-image policies even in production) shows
-                // as a broken image for every recipient. Matches TicketPdfController's
-                // approach to the same logo for the same reason.
-                'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
             ]);
     }
 }

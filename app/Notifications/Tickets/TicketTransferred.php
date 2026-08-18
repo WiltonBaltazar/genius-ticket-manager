@@ -52,7 +52,6 @@ class TicketTransferred extends Notification implements ShouldQueue
                 'ctaLabel' => 'Descarregar bilhete',
                 'ctaUrl' => url("/orders/{$order->id}/tickets/{$this->ticket->id}/pdf"),
                 'helperLine' => 'Guarde este e-mail — é assim que acede ao seu bilhete.',
-                'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
             ]);
     }
 }

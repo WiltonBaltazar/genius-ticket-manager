@@ -56,7 +56,6 @@ class OrderStatusLink extends Notification implements ShouldQueue
                 'expiresAt' => $this->order->created_at->copy()->addHours(24),
                 'orderUrl' => url('/orders/'.$this->order->id),
                 'orderRef' => strtoupper(substr($this->order->id, 0, 8)),
-                'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
             ]);
     }
 }

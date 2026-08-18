@@ -49,7 +49,6 @@ class TicketTransferConfirmed extends Notification implements ShouldQueue
                 'ctaLabel' => null,
                 'ctaUrl' => null,
                 'helperLine' => 'Se não foi você quem fez esta transferência, contacte-nos imediatamente.',
-                'logoBase64' => base64_encode(file_get_contents(public_path('images/logo.png'))),
             ]);
     }
 }
