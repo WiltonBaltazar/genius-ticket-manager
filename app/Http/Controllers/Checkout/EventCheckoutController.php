@@ -17,9 +17,12 @@ class EventCheckoutController extends Controller
      * Dual-purpose, like the /auth/{any?} SPA shell: a browser navigating here
      * gets the React shell (which re-fetches this same URL as JSON once
      * mounted); the app's own fetch() call gets the JSON payload directly.
-     * The public landing page: the single most-recently-created published
-     * event that hasn't already finished, so the whole buy flow (tickets,
-     * attendee details) lives on this one page rather than a list linking out.
+     * The public landing page: the single soonest-upcoming (or currently
+     * running) published event, so the whole buy flow (tickets, attendee
+     * details) lives on this one page rather than a list linking out.
+     * Ordered by start_date, not created_at — an existing event edited to
+     * start today must immediately become the one shown, regardless of when
+     * its row was first created relative to other published events.
      */
     public function index(Request $request): Response
     {
@@ -27,7 +30,7 @@ class EventCheckoutController extends Controller
             return response(view('app'));
         }
 
-        $event = $this->activeEvents()->orderByDesc('created_at')->first();
+        $event = $this->activeEvents()->orderBy('start_date')->first();
 
         if ($event === null) {
             return response()->json(['event' => null, 'ticket_types' => []]);

@@ -3,33 +3,22 @@
 use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\TicketType;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 /*
- * The landing page shows a single event (the most recently created active
- * one), not a list — so "latest" needs deterministic created_at control in
- * these tests. Two oversell concurrency tests (tests/Pest.php) commit real
- * Event rows outside any transaction and never clean them up, so the events
- * table isn't guaranteed empty; setting created_at far in the future makes a
- * test event unambiguously "the latest" regardless of that leftover data.
+ * The landing page shows a single event (the soonest-upcoming or currently
+ * running active one), not a list. Explicit test events are given a
+ * start_date well inside the next few days so they reliably beat any
+ * leftover Event rows from the oversell concurrency tests (tests/Pest.php),
+ * which commit real rows outside a transaction with a random start_date
+ * between +1 week and +6 months and never clean them up.
  */
-function withCreatedAt(Event $event, Carbon $timestamp): Event
-{
-    DB::table('events')->where('id', $event->id)->update(['created_at' => $timestamp]);
-
-    return $event->fresh();
-}
 
 it('returns the active event with its on-sale ticket types', function () {
-    $event = withCreatedAt(
-        Event::factory()->create([
-            'status' => EventStatus::Published,
-            'start_date' => now()->addWeek(),
-            'end_date' => now()->addWeek()->toDateString(),
-        ]),
-        now()->addYear(),
-    );
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now()->addDay(),
+        'end_date' => now()->addDay()->toDateString(),
+    ]);
     $ticketType = TicketType::factory()->for($event)->create(['price' => 250]);
 
     $response = $this->getJson('/');
@@ -42,34 +31,58 @@ it('returns the active event with its on-sale ticket types', function () {
     ]);
 });
 
-it('returns the most recently created active event when more than one exists', function () {
-    $older = withCreatedAt(
-        Event::factory()->create([
-            'status' => EventStatus::Published,
-            'start_date' => now()->addWeek(),
-            'end_date' => now()->addWeek()->toDateString(),
-        ]),
-        now()->subDay(),
-    );
-    $newer = withCreatedAt(
-        Event::factory()->create([
-            'status' => EventStatus::Published,
-            'start_date' => now()->addMonth(),
-            'end_date' => now()->addMonth()->toDateString(),
-        ]),
-        now()->addYear(),
-    );
+it('returns the soonest-upcoming active event when more than one exists', function () {
+    $soonest = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now()->addDay(),
+        'end_date' => now()->addDay()->toDateString(),
+    ]);
+    $later = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now()->addMonth(),
+        'end_date' => now()->addMonth()->toDateString(),
+    ]);
 
     $response = $this->getJson('/');
 
     $response->assertOk();
-    $response->assertJsonPath('event.id', $newer->id);
-    expect($response->json('event.id'))->not->toBe($older->id);
+    $response->assertJsonPath('event.id', $soonest->id);
+    expect($response->json('event.id'))->not->toBe($later->id);
 });
 
-it('excludes a draft, closed, or archived event even if it is the most recently created', function () {
+it('prefers an event just edited to start today over an older, more-recently-created event dated further out', function () {
+    $editedToStartToday = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now()->addMonth(),
+        'end_date' => now()->addMonth()->toDateString(),
+    ]);
+    // Editing an existing row doesn't touch created_at — the picker must not
+    // depend on it, or a same-day reschedule stays invisible on the landing
+    // page behind whatever else was created most recently.
+    $editedToStartToday->update([
+        'start_date' => now(),
+        'end_date' => now()->toDateString(),
+    ]);
+
+    Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now()->addWeeks(2),
+        'end_date' => now()->addWeeks(2)->toDateString(),
+    ]);
+
+    $response = $this->getJson('/');
+
+    $response->assertOk();
+    $response->assertJsonPath('event.id', $editedToStartToday->id);
+});
+
+it('excludes a draft, closed, or archived event even if it is the soonest upcoming', function () {
     foreach ([EventStatus::Draft, EventStatus::Closed, EventStatus::Archived] as $status) {
-        $event = withCreatedAt(Event::factory()->create(['status' => $status]), now()->addYear());
+        $event = Event::factory()->create([
+            'status' => $status,
+            'start_date' => now(),
+            'end_date' => now()->toDateString(),
+        ]);
 
         $response = $this->getJson('/');
 
@@ -78,15 +91,12 @@ it('excludes a draft, closed, or archived event even if it is the most recently 
     }
 });
 
-it('excludes an event that has already finished even if it is the most recently created', function () {
-    $event = withCreatedAt(
-        Event::factory()->create([
-            'status' => EventStatus::Published,
-            'start_date' => now()->subMonth(),
-            'end_date' => now()->subMonth()->toDateString(),
-        ]),
-        now()->addYear(),
-    );
+it('excludes an event that has already finished', function () {
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now()->subMonth(),
+        'end_date' => now()->subMonth()->toDateString(),
+    ]);
 
     $response = $this->getJson('/');
 
@@ -95,14 +105,11 @@ it('excludes an event that has already finished even if it is the most recently 
 });
 
 it('includes a multi-day event that already started but has not ended', function () {
-    $event = withCreatedAt(
-        Event::factory()->create([
-            'status' => EventStatus::Published,
-            'start_date' => now()->subDay(),
-            'end_date' => now()->addDay()->toDateString(),
-        ]),
-        now()->addYear(),
-    );
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now()->subDay(),
+        'end_date' => now()->addDay()->toDateString(),
+    ]);
 
     $response = $this->getJson('/');
 
@@ -111,7 +118,11 @@ it('includes a multi-day event that already started but has not ended', function
 });
 
 it('omits a ticket type that is not yet on sale', function () {
-    $event = withCreatedAt(Event::factory()->create(['status' => EventStatus::Published]), now()->addYear());
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'start_date' => now(),
+        'end_date' => now()->toDateString(),
+    ]);
     $notYetOnSale = TicketType::factory()->for($event)->create([
         'sales_start_date' => now()->addWeek(),
         'sales_end_date' => now()->addMonth(),
