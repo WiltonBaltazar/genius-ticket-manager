@@ -132,18 +132,20 @@ export function TicketTypeSelector({
                                         {ticketType.description}
                                     </p>
                                 )}
-                                <p className="mt-1.5 font-condensed text-xs font-semibold uppercase tracking-wide">
-                                    {soldOut ? (
-                                        <span className="text-red-text">
-                                            Esgotado
-                                        </span>
-                                    ) : (
-                                        <span className="text-deep-purple/40">
-                                            {ticketType.availableQuantity}{" "}
-                                            restantes
-                                        </span>
-                                    )}
-                                </p>
+                                {(soldOut || ticketType.availableQuantity <= 10) && (
+                                    <p className="mt-1.5 font-condensed text-xs font-semibold uppercase tracking-wide">
+                                        {soldOut ? (
+                                            <span className="text-red-text">
+                                                Esgotado
+                                            </span>
+                                        ) : (
+                                            <span className="text-deep-purple/40">
+                                                {ticketType.availableQuantity}{" "}
+                                                restantes
+                                            </span>
+                                        )}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="flex items-center gap-4">
