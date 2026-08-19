@@ -170,9 +170,30 @@ export function TicketTypeSelector({
                                             >
                                                 −
                                             </button>
-                                            <span className="w-5 text-center font-sans text-sm font-semibold text-deep-purple">
-                                                {inCartForVariant}
-                                            </span>
+                                            <input
+                                                type="number"
+                                                inputMode="numeric"
+                                                min={0}
+                                                max={ticketType.availableQuantity}
+                                                value={inCartForVariant}
+                                                onChange={(e) => {
+                                                    const next = Number(
+                                                        e.target.value,
+                                                    );
+                                                    if (Number.isNaN(next))
+                                                        return;
+                                                    cart.setQuantity(
+                                                        ticketType.id,
+                                                        next,
+                                                        selectedDate,
+                                                    );
+                                                }}
+                                                onFocus={(e) =>
+                                                    e.target.select()
+                                                }
+                                                aria-label={`Quantidade de ${ticketType.name}`}
+                                                className="w-10 rounded border border-deep-purple/25 bg-transparent text-center font-sans text-sm font-semibold text-deep-purple [appearance:textfield] focus:border-gold focus:outline-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                            />
                                             <button
                                                 type="button"
                                                 aria-label={`Adicionar um ${ticketType.name}`}
