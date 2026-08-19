@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\TicketTypes\Tables;
 
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -37,11 +40,17 @@ class TicketTypesTable
                     ->dateTime()
                     ->sortable(),
             ])
-            // No delete/restore/force-delete actions and no bulk actions: no
-            // role, including super_admin, can delete a ticket type through
-            // this panel (FR-011).
             ->recordActions([
                 EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    // authorizeIndividualRecords(): DeleteBulkAction has no automatic
+                    // per-record authorization otherwise — see EventsTable's identical
+                    // note. Without it, bulk delete would bypass "only super_admin".
+                    DeleteBulkAction::make()->authorizeIndividualRecords(),
+                ]),
             ]);
     }
 }

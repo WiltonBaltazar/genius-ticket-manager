@@ -114,9 +114,11 @@ it('refuses support and gate_operator from viewing, creating, or editing ticket 
     }
 });
 
-it('exposes no delete action for ticket types, for any role including super_admin', function () {
-    $ticketType = TicketType::factory()->create();
+it('refuses event_manager from deleting a ticket type; only super_admin can', function () {
+    $eventManager = Staff::factory()->eventManager()->create();
     $superAdmin = Staff::factory()->superAdmin()->create();
+    $ticketType = TicketType::factory()->create();
 
-    expect($superAdmin->can('delete', $ticketType))->toBeFalse();
+    expect($eventManager->can('delete', $ticketType))->toBeFalse();
+    expect($superAdmin->can('delete', $ticketType))->toBeTrue();
 });

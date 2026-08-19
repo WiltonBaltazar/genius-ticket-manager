@@ -42,7 +42,7 @@ No changes to `id`, `event_id`, `name`, `description`, `price` (kept `DECIMAL(10
 - `available_quantity`: always read-only in the admin UI (spec.md FR-012). On create, defaults to the submitted `total_quantity` (no sales exist yet for a brand-new ticket type) — set server-side, never staff-entered.
 - `price`: entered/displayed as a plain MZN decimal amount; no unit conversion (research.md §4).
 - `sales_end_date`, when set, should not precede `sales_start_date` — a form-level validation rule (mirrors the Edge Cases entry in spec.md); not DB-enforced, consistent with `sales_start_date`/`sales_end_date` both being nullable/independent.
-- No delete action is exposed for this resource, for any role (research.md §6).
+- Delete is restricted to `super_admin` (spec.md FR-011), unrestricted by sales state — deleting a ticket type that already has sold tickets is allowed and is the staff member's responsibility, not blocked by this feature.
 
 **State transitions**: none beyond the `total_quantity`-lock behavior above. Per spec.md FR-013 (resolved 2026-08-14), this is a live condition, not a one-way gate: if `available_quantity` is ever restored to equal `total_quantity` (e.g., by a future refund/cancellation feature — no code in this feature does so), the field becomes editable again on the next form load/save, since the check always re-reads current state rather than a flag captured at first sale. This scenario is unobservable within this feature's own scope (nothing here ever increases `available_quantity`); it matters only once a future refund workflow exists.
 
@@ -66,16 +66,16 @@ No columns change. This feature only reads these tables (spec.md FR-016).
 
 **No new validation rules or state transitions** — every field on this resource is presented disabled/read-only (spec.md FR-016); no code path in this feature writes to `orders` or `order_items`.
 
-## Role → Resource access matrix (spec.md FR-004, FR-005, FR-010, FR-018; research.md §6, §7)
+## Role → Resource access matrix (spec.md FR-004, FR-005, FR-010, FR-011, FR-018, FR-028; research.md §7)
 
 | Role | Events | Ticket Types | Orders |
 |---|---|---|---|
-| `super_admin` | view, create, edit, **delete** | view, create, edit | view |
-| `event_manager` | view, create, edit (no delete) | view, create, edit | view |
-| `support` | — (no access) | — (no access) | view only |
+| `super_admin` | view, create, edit, **delete** | view, create, edit, **delete** | view, **delete** |
+| `event_manager` | view, create, edit (no delete) | view, create, edit (no delete) | view (no delete) |
+| `support` | — (no access) | — (no access) | view (no delete) |
 | `gate_operator` / unrecognized | — (no access) | — (no access) | — (no access) |
 
-No role, including `super_admin`, has create/edit/delete on Orders (spec.md FR-016) or delete on Ticket Types (research.md §6) through this admin panel.
+No role, including `super_admin`, has create/edit on Orders beyond the narrow ConfirmPayment/Refund actions (spec.md FR-016) — delete is the one exception (FR-028), distinct from editing an order's fields.
 
 ## Entity-Relationship Summary (delta from feature 001/002)
 

@@ -55,3 +55,17 @@ it('exposes no create or edit route for orders', function () {
     $this->actingAs($staff, 'staff')->get('/admin/orders/create')->assertNotFound();
     $this->actingAs($staff, 'staff')->get("/admin/orders/{$order->id}/edit")->assertNotFound();
 });
+
+it('refuses event_manager and support from deleting an order; only super_admin can', function () {
+    $order = Order::factory()->create();
+
+    foreach (['eventManager', 'support'] as $factoryState) {
+        $staff = Staff::factory()->{$factoryState}()->create();
+
+        expect($staff->can('delete', $order))->toBeFalse();
+    }
+
+    $superAdmin = Staff::factory()->superAdmin()->create();
+
+    expect($superAdmin->can('delete', $order))->toBeTrue();
+});

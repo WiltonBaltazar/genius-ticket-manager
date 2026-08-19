@@ -30,9 +30,7 @@ class TicketTypePolicy
 
     public function delete(Staff $staff, TicketType $ticketType): bool
     {
-        // No role, including super_admin, can delete a ticket type through this
-        // admin panel — out of scope for this feature (spec.md FR-011).
-        return false;
+        return $staff->role === StaffRole::SuperAdmin;
     }
 
     private function hasTicketTypesAccess(Staff $staff): bool

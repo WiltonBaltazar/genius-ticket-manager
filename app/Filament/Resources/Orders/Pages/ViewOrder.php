@@ -7,6 +7,7 @@ use App\Actions\Orders\RefundOrderAction;
 use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\OrderResource;
 use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -15,12 +16,15 @@ class ViewOrder extends ViewRecord
     protected static string $resource = OrderResource::class;
 
     // Every order field stays disabled/non-editable from this panel
-    // (FR-016; no edit route exists for this resource) — ConfirmPayment and
-    // Refund (004-attendee-checkout) are the two narrow, distinct actions
-    // this resource exposes, not a general edit capability.
+    // (FR-016; no edit route exists for this resource) — ConfirmPayment,
+    // Refund (004-attendee-checkout), and Delete (OrderPolicy::delete(),
+    // super_admin only) are the narrow, distinct actions this resource
+    // exposes, not a general edit capability.
     protected function getHeaderActions(): array
     {
         return [
+            DeleteAction::make(),
+
             Action::make('confirmPayment')
                 ->label('Confirm Payment')
                 ->color('success')

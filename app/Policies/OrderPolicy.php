@@ -54,7 +54,7 @@ class OrderPolicy
 
     public function delete(Staff $staff, Order $order): bool
     {
-        return false;
+        return $staff->role === StaffRole::SuperAdmin;
     }
 
     private function hasOrdersAccess(Staff $staff): bool
