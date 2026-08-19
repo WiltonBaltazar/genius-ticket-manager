@@ -5,6 +5,7 @@ import { getJson } from "../lib/auth";
 import { useCart } from "../lib/cart";
 import { TicketTypeSelector } from "../components/checkout/TicketTypeSelector";
 import { CheckoutDetailsForm } from "../components/checkout/CheckoutDetailsForm";
+import { formatEventDate } from "../lib/formatEventDate";
 
 type EventDetail = {
     id: string;
@@ -106,19 +107,29 @@ function HomePage() {
                     }
                 />
                 <div className="relative mx-auto max-w-2xl px-6 py-16 sm:py-24">
-                    <p className="font-condensed text-xs font-semibold uppercase tracking-[0.35em] text-gold">
-                        {new Date(event.start_date).toLocaleDateString("pt", {
-                            dateStyle: "long",
-                        })}
-                    </p>
-                    <h1 className="mt-4 font-display text-4xl leading-[1.1] text-white sm:text-5xl">
+                    <h1 className="font-display text-4xl leading-[1.1] text-white sm:text-5xl">
                         {event.name}
                     </h1>
-                    {event.venue && (
-                        <p className="mt-4 font-sans text-base text-white/75">
-                            {event.venue}
-                        </p>
-                    )}
+                    <dl className="mt-6 flex flex-wrap gap-x-10 gap-y-4">
+                        <div>
+                            <dt className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
+                                Data
+                            </dt>
+                            <dd className="mt-1 font-sans text-base text-white/90">
+                                {formatEventDate(event.start_date, event.end_date)}
+                            </dd>
+                        </div>
+                        {event.venue && (
+                            <div>
+                                <dt className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
+                                    Local
+                                </dt>
+                                <dd className="mt-1 font-sans text-base text-white/90">
+                                    {event.venue}
+                                </dd>
+                            </div>
+                        )}
+                    </dl>
                 </div>
             </section>
 
@@ -176,6 +187,25 @@ function HomePage() {
                                 }
                             />
                         </div>
+                    </div>
+                )}
+
+                {window.__CHECKOUT_CONFIG__.whatsappNumber && (
+                    <div className="mt-12 border-t border-deep-purple/10 pt-10">
+                        <p className="font-condensed text-xs font-semibold uppercase tracking-[0.3em] text-gold">
+                            Dúvidas?
+                        </p>
+                        <p className="mt-3 font-sans text-base text-deep-purple/70">
+                            Fale connosco no WhatsApp.
+                        </p>
+                        <a
+                            href={`https://wa.me/${window.__CHECKOUT_CONFIG__.whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre o evento ${event.name}.`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-4 inline-block rounded-full bg-deep-purple px-6 py-2.5 text-center font-condensed text-sm font-semibold uppercase tracking-wide text-white transition-colors hover:bg-gold hover:text-deep-purple"
+                        >
+                            Abrir WhatsApp
+                        </a>
                     </div>
                 )}
             </div>
