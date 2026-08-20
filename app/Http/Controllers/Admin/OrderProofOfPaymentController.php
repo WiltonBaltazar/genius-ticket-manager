@@ -20,6 +20,12 @@ class OrderProofOfPaymentController extends Controller
         abort_if(! $order->proof_of_payment_path, 404);
         abort_unless(auth('staff')->user()?->can('view', $order), 403);
 
+        // Storage::response() calls straight through to Flysystem's fileSize(),
+        // which throws UnableToRetrieveMetadata (an uncaught 500, not a 404) if
+        // the file the DB path points to isn't actually on disk — checking
+        // exists() first turns that into the same 404 a missing path already gets.
+        abort_unless(Storage::disk('local')->exists($order->proof_of_payment_path), 404);
+
         return Storage::disk('local')->response($order->proof_of_payment_path);
     }
 }
