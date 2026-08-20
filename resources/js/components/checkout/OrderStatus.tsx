@@ -102,10 +102,18 @@ export function OrderStatus({
                     </p>
                 )}
                 {order.status === "pending" && (
-                    <p className="font-sans text-sm text-deep-purple/70">
-                        Complete uma das opções abaixo para confirmar o seu
-                        pedido.
-                    </p>
+                    <>
+                        <p className="font-sans text-sm text-deep-purple/70">
+                            Complete uma das opções abaixo para confirmar o
+                            seu pedido.
+                        </p>
+                        <p className="mt-3 rounded-md border border-amber-400/40 bg-amber-50 px-4 py-3 font-sans text-sm text-amber-900">
+                            A sua inscrição só será válida após o pagamento. O
+                            pagamento deverá ser efectuado no prazo máximo de
+                            24 horas após a inscrição. Após esse período, a
+                            inscrição será automaticamente cancelada.
+                        </p>
+                    </>
                 )}
                 {order.status === "expired" && (
                     <p className="font-sans text-sm text-deep-purple/70">
