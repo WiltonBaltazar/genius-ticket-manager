@@ -175,7 +175,7 @@ function EventPage() {
                             Dúvidas?
                         </p>
                         <p className="mt-3 font-sans text-base text-deep-purple/70">
-                            Fale connosco no WhatsApp.
+                            Fala connosco pelo WhatsApp.
                         </p>
                         <a
                             href={`https://wa.me/${window.__CHECKOUT_CONFIG__.whatsappNumber}?text=${encodeURIComponent(`Olá! Tenho uma dúvida sobre o evento ${data.event.name}.`)}`}
