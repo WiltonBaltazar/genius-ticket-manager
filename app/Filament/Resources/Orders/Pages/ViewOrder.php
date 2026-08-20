@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\Orders\Pages;
 
 use App\Actions\Orders\ConfirmOrderPaymentAction;
+use App\Actions\Orders\DeleteOrderAction;
 use App\Actions\Orders\RefundOrderAction;
 use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\OrderResource;
+use App\Models\Order;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
@@ -23,7 +25,11 @@ class ViewOrder extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                // See OrdersTable's identical note: routes delete through
+                // DeleteOrderAction so the order's reserved/sold quantity comes
+                // back instead of staying phantom-sold.
+                ->using(fn (Order $record, DeleteOrderAction $deleteOrderAction) => $deleteOrderAction->handle($record, auth('staff')->user())),
 
             Action::make('confirmPayment')
                 ->label('Confirm Payment')

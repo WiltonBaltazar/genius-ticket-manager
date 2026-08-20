@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Orders\Tables;
 
+use App\Actions\Orders\DeleteOrderAction;
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use Filament\Actions\BulkActionGroup;
@@ -10,6 +11,9 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 class OrdersTable
 {
@@ -54,13 +58,30 @@ class OrdersTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    // Default DeleteAction just calls $record->delete() — using()
+                    // routes it through DeleteOrderAction instead so its reserved/sold
+                    // quantity comes back rather than staying phantom-sold (see that
+                    // action's docblock for the paid-order ticket-voiding detail).
+                    ->using(fn (Order $record, DeleteOrderAction $deleteOrderAction) => $deleteOrderAction->handle($record, auth('staff')->user())),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     // authorizeIndividualRecords(): see EventsTable's identical note —
                     // without it, bulk delete bypasses "only super_admin".
-                    DeleteBulkAction::make()->authorizeIndividualRecords(),
+                    DeleteBulkAction::make()
+                        ->authorizeIndividualRecords()
+                        ->using(function (DeleteBulkAction $action, EloquentCollection|Collection|LazyCollection $records, DeleteOrderAction $deleteOrderAction) {
+                            $records->each(function (Order $record) use ($action, $deleteOrderAction) {
+                                try {
+                                    $deleteOrderAction->handle($record, auth('staff')->user()) || $action->reportBulkProcessingFailure();
+                                } catch (\Throwable $exception) {
+                                    $action->reportBulkProcessingFailure();
+
+                                    report($exception);
+                                }
+                            });
+                        }),
                 ]),
             ]);
     }
