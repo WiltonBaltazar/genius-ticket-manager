@@ -65,7 +65,7 @@ class EventForm
                     ->disk('public')
                     ->directory('events/hero-images')
                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                    ->maxSize(5120),
+                    ->maxSize(40960),
                 RichEditor::make('description')
                     ->dehydrateStateUsing(fn (?string $state) => filled(strip_tags($state ?? '')) ? $state : null),
                 Select::make('status')

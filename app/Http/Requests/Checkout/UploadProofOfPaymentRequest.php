@@ -17,7 +17,7 @@ class UploadProofOfPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:40960'],
         ];
     }
 
@@ -29,7 +29,7 @@ class UploadProofOfPaymentRequest extends FormRequest
         return [
             'file.required' => 'Selecione um ficheiro para enviar.',
             'file.mimes' => 'O ficheiro deve ser uma imagem (JPG, PNG) ou um PDF.',
-            'file.max' => 'O ficheiro não pode exceder 5 MB.',
+            'file.max' => 'O ficheiro não pode exceder 40 MB.',
         ];
     }
 }

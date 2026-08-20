@@ -53,3 +53,17 @@ it('rejects a missing or invalid file', function () {
         'file' => UploadedFile::fake()->create('not-allowed.exe', 10),
     ])->assertUnprocessable();
 });
+
+it('accepts a file up to 40MB and rejects one over that', function () {
+    $order = Order::factory()->pending()->create();
+
+    uploadProofOfPayment($order, [
+        'file' => UploadedFile::fake()->create('receipt.jpg', 40960 - 1),
+    ])->assertOk();
+
+    $order2 = Order::factory()->pending()->create();
+
+    uploadProofOfPayment($order2, [
+        'file' => UploadedFile::fake()->create('receipt.jpg', 40960 + 1),
+    ])->assertUnprocessable();
+});
