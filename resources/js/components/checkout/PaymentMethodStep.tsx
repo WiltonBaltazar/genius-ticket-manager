@@ -111,14 +111,37 @@ function AmountLead({ order }: { order: OrderSummary }) {
     );
 }
 
+/** Shared by every non-WhatsApp panel (bank transfer and each mobile money method) so buyers stuck mid-payment have one consistent way to reach us instead of abandoning the order. */
+function WhatsAppHelpLink({ waLink, question }: { waLink: string | null; question: string }) {
+    if (!waLink) return null;
+
+    return (
+        <div className="mt-5 border-t border-dashed border-deep-purple/15 pt-4">
+            <p className="font-sans text-xs text-deep-purple/60">
+                {question}{" "}
+                <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-deep-purple underline decoration-deep-purple/30 underline-offset-2 transition-colors hover:text-gold-hover hover:decoration-gold-hover"
+                >
+                    Envie-nos uma mensagem no WhatsApp
+                </a>
+            </p>
+        </div>
+    );
+}
+
 function MobileMoneyPanel({
     label,
     details,
     order,
+    waLink,
 }: {
     label: string;
     details: MobileMoneyDetails;
     order: OrderSummary;
+    waLink: string | null;
 }) {
     return (
         <div>
@@ -144,6 +167,7 @@ function MobileMoneyPanel({
                     </p>
                 </div>
             )}
+            <WhatsAppHelpLink waLink={waLink} question="Dúvidas sobre o pagamento?" />
         </div>
     );
 }
@@ -300,29 +324,15 @@ export function PaymentMethodStep({
                     </p>
                 )}
 
-                {waLink && (
-                    <div className="mt-5 border-t border-dashed border-deep-purple/15 pt-4">
-                        <p className="font-sans text-xs text-deep-purple/60">
-                            Dúvidas sobre a transferência?{" "}
-                            <a
-                                href={waLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="font-semibold text-deep-purple underline decoration-deep-purple/30 underline-offset-2 transition-colors hover:text-gold-hover hover:decoration-gold-hover"
-                            >
-                                Envie-nos uma mensagem no WhatsApp
-                            </a>
-                        </p>
-                    </div>
-                )}
+                <WhatsAppHelpLink waLink={waLink} question="Dúvidas sobre a transferência?" />
             </div>
         );
     } else if (method === "emola") {
-        panel = <MobileMoneyPanel label={MOBILE_MONEY_LABELS.emola} details={emola} order={order} />;
+        panel = <MobileMoneyPanel label={MOBILE_MONEY_LABELS.emola} details={emola} order={order} waLink={waLink} />;
     } else if (method === "mpesa") {
-        panel = <MobileMoneyPanel label={MOBILE_MONEY_LABELS.mpesa} details={mpesa} order={order} />;
+        panel = <MobileMoneyPanel label={MOBILE_MONEY_LABELS.mpesa} details={mpesa} order={order} waLink={waLink} />;
     } else if (method === "mkesh") {
-        panel = <MobileMoneyPanel label={MOBILE_MONEY_LABELS.mkesh} details={mkesh} order={order} />;
+        panel = <MobileMoneyPanel label={MOBILE_MONEY_LABELS.mkesh} details={mkesh} order={order} waLink={waLink} />;
     }
 
     return (
