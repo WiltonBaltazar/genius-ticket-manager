@@ -20,7 +20,7 @@ class OrdersTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['attendee', 'orderItems.ticketType.event']))
+            ->modifyQueryUsing(fn ($query) => $query->with(['attendee', 'orderItems.ticketType.event', 'tickets']))
             ->defaultSort('created_at', 'desc')
             // Read-mostly (FR-016): no edit and no create route exists for this
             // resource — delete is the one exception, restricted to super_admin
@@ -35,6 +35,26 @@ class OrdersTable
                 TextColumn::make('attendee.email')
                     ->label('Email')
                     ->searchable(),
+                // Only transferred tickets' holders — an untransferred ticket's holder is
+                // just the buyer, already shown in the Attendee column. Searchable so an
+                // admin can find the order a transferred ticket's new owner came from.
+                TextColumn::make('ticket_holders')
+                    ->label('Transferred To')
+                    ->getStateUsing(fn (Order $record) => $record->tickets
+                        ->whereNotNull('transferred_at')
+                        ->map(fn ($ticket) => "{$ticket->holder_name} ({$ticket->holder_email})")
+                        ->unique()
+                        ->values()
+                        ->all())
+                    ->listWithLineBreaks()
+                    ->placeholder('—')
+                    ->searchable(query: fn ($query, string $search) => $query->whereHas(
+                        'tickets',
+                        fn ($ticketQuery) => $ticketQuery->where(fn ($holderQuery) => $holderQuery
+                            ->where('holder_name', 'like', "%{$search}%")
+                            ->orWhere('holder_email', 'like', "%{$search}%")
+                            ->orWhere('holder_phone', 'like', "%{$search}%")),
+                    )),
                 TextColumn::make('event')
                     ->label('Event')
                     ->getStateUsing(fn (Order $record) => $record->event()?->name),

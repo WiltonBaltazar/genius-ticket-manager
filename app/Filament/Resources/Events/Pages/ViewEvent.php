@@ -22,7 +22,7 @@ class ViewEvent extends ViewRecord
                 ->visible(fn () => auth('staff')->user()?->can('exportAttendees', $this->record))
                 ->action(function (ExportEventAttendeesAction $exportEventAttendeesAction) {
                     $rows = $exportEventAttendeesAction->handle($this->record);
-                    $columns = ['Name', 'Email', 'Phone', 'Ticket Type', 'Event Date', 'Status', 'Checked In At', 'Order Reference', 'Order Status'];
+                    $columns = ExportEventAttendeesAction::COLUMNS;
                     $fileName = "attendees-{$this->record->slug}-".now()->format('Y-m-d').'.xlsx';
 
                     // openspout, not phpoffice/phpspreadsheet: already a dependency (Filament's own

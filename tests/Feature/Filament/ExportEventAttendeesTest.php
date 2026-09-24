@@ -34,12 +34,14 @@ it('exports one row per ticket with the current holder\'s name/email/phone', fun
         ->and($row['Ticket Type'])->toBe('Geral')
         ->and($row['Status'])->toBe('unused')
         ->and($row['Order Status'])->toBe('paid')
-        ->and($row['Order Reference'])->toBe(strtoupper(substr($order->id, 0, 8)));
+        ->and($row['Order Reference'])->toBe(strtoupper(substr($order->id, 0, 8)))
+        ->and($row['Transferred At'])->toBeNull()
+        ->and(array_keys($row))->toBe(ExportEventAttendeesAction::COLUMNS);
 });
 
 it('reflects the new holder on a transferred ticket, not the order\'s own attendee', function () {
     $event = Event::factory()->create();
-    [, $ticket] = paidTicketFor($event);
+    [$order, $ticket] = paidTicketFor($event);
 
     app(TransferTicketAction::class)->handle($ticket, 'Nova Pessoa', 'nova@example.test', '+258840000001');
 
@@ -47,7 +49,10 @@ it('reflects the new holder on a transferred ticket, not the order\'s own attend
 
     expect($rows->first()['Name'])->toBe('Nova Pessoa')
         ->and($rows->first()['Email'])->toBe('nova@example.test')
-        ->and($rows->first()['Phone'])->toBe('+258840000001');
+        ->and($rows->first()['Phone'])->toBe('+258840000001')
+        ->and($rows->first()['Transferred At'])->not->toBeNull()
+        ->and($rows->first()['Buyer Name'])->toBe($order->attendee->name)
+        ->and($rows->first()['Buyer Email'])->toBe($order->attendee->email);
 });
 
 it('only includes tickets for the given event, not other events\' tickets', function () {

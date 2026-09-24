@@ -76,7 +76,7 @@ it('downloads an XLSX with the right header row and attendee data when invoked t
     $reader->close();
     unlink($tempPath);
 
-    expect($rows[0])->toBe(['Name', 'Email', 'Phone', 'Ticket Type', 'Event Date', 'Status', 'Checked In At', 'Order Reference', 'Order Status'])
+    expect($rows[0])->toBe(['Name', 'Email', 'Phone', 'Ticket Type', 'Event Date', 'Status', 'Checked In At', 'Transferred At', 'Buyer Name', 'Buyer Email', 'Order Reference', 'Order Status'])
         ->and($rows[1])->toBe([
             $confirmed->attendee->name,
             $confirmed->attendee->email,
@@ -85,6 +85,9 @@ it('downloads an XLSX with the right header row and attendee data when invoked t
             '',
             'unused',
             '',
+            '',
+            $confirmed->attendee->name,
+            $confirmed->attendee->email,
             strtoupper(substr($confirmed->id, 0, 8)),
             'paid',
         ]);

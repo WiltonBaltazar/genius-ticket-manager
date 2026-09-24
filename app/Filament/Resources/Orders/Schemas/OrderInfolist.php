@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Orders\Schemas;
 
 use App\Enums\OrderStatus;
 use App\Models\Order;
+use App\Models\Ticket;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -47,6 +48,31 @@ class OrderInfolist
                         TextEntry::make('unit_price')->label('Unit Price (MZN)')->money('MZN'),
                     ])
                     ->columns(3),
+                // Per-ticket holder, not the buyer — a transferred ticket belongs to
+                // whoever it was handed to (TransferTicketAction), so this is where the
+                // admin sees who is actually coming on each ticket of this order.
+                RepeatableEntry::make('tickets')
+                    ->label('Tickets')
+                    ->visible(fn (Order $record) => $record->tickets->isNotEmpty())
+                    ->schema([
+                        TextEntry::make('ticketType.name')->label('Ticket Type'),
+                        TextEntry::make('holder')
+                            ->label('Holder')
+                            ->state(fn (Ticket $record) => $record->currentHolderName()),
+                        TextEntry::make('holder_email_display')
+                            ->label('Email')
+                            ->state(fn (Ticket $record) => $record->currentHolderEmail()),
+                        TextEntry::make('holder_phone_display')
+                            ->label('Phone')
+                            ->state(fn (Ticket $record) => $record->currentHolderPhone())
+                            ->placeholder('—'),
+                        TextEntry::make('status')->badge(),
+                        TextEntry::make('transferred_at')
+                            ->label('Transferred')
+                            ->dateTime()
+                            ->placeholder('Not transferred'),
+                    ])
+                    ->columns(6),
             ]);
     }
 }

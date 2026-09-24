@@ -9,6 +9,12 @@ use Illuminate\Support\Collection;
 class ExportEventAttendeesAction
 {
     /**
+     * Header row for the XLSX — kept here, beside the row keys it must match,
+     * rather than in ViewEvent where it could silently drift out of order.
+     */
+    public const COLUMNS = ['Name', 'Email', 'Phone', 'Ticket Type', 'Event Date', 'Status', 'Checked In At', 'Transferred At', 'Buyer Name', 'Buyer Email', 'Order Reference', 'Order Status'];
+
+    /**
      * Every ticket issued for the event, one row per ticket rather than per
      * order — a multi-ticket order can have each ticket transferred to a
      * different person (Ticket::currentHolderName/Email/Phone), so the order's
@@ -33,6 +39,9 @@ class ExportEventAttendeesAction
                 'Event Date' => $ticket->event_date?->toDateString(),
                 'Status' => $ticket->status->value,
                 'Checked In At' => $ticket->checked_in_at?->toIso8601String(),
+                'Transferred At' => $ticket->transferred_at?->toIso8601String(),
+                'Buyer Name' => $ticket->orderItem->order->attendee->name,
+                'Buyer Email' => $ticket->orderItem->order->attendee->email,
                 'Order Reference' => strtoupper(substr($ticket->orderItem->order_id, 0, 8)),
                 'Order Status' => $ticket->orderItem->order->status->value,
             ]);
