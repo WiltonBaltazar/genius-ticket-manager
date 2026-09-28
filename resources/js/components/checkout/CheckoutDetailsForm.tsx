@@ -68,6 +68,12 @@ export function CheckoutDetailsForm({
                     next[field] = messages[0];
                 }
                 setErrors(next);
+                // Cart-item errors (e.g. a ticket type whose sales window closed
+                // while this page was open) have no input to sit under.
+                const itemError = Object.entries(next).find(([field]) =>
+                    field.startsWith("items"),
+                );
+                if (itemError) setFormError(itemError[1]);
             } else {
                 setFormError("Ocorreu um erro. Tente novamente.");
             }
