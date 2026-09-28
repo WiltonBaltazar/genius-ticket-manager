@@ -68,6 +68,21 @@ minutes.
 is required there. The queue worker (`php artisan queue:work`) is supervised the same way, which
 is what actually delivers the `ShouldQueue` order/ticket-transfer/auth email notifications.
 
+## Persistent storage for uploads (Docker/Coolify)
+
+Uploaded files live on disk under `storage/app`: attendee proof-of-payment files in
+`storage/app/private/proof-of-payment` (served to staff only via
+`/admin/orders/{order}/proof-of-payment-file`) and event hero images in `storage/app/public`.
+The Docker image contains none of these, so **without a persistent volume every redeploy
+deletes all uploads** while the database keeps pointing at them — the admin "view proof of
+payment" link then 404s and hero images break.
+
+In Coolify, add a persistent storage volume to the app with destination path
+`/var/www/html/storage/app` (only `storage/app`, not all of `storage` — the image's own
+`storage/framework` cache directories must stay). `docker/entrypoint.sh` recreates the
+disk roots and fixes ownership on start, so an empty volume works as-is. Files uploaded
+before the volume existed are not recoverable.
+
 ## Payment settings (WhatsApp number, bank details)
 
 The `WHATSAPP_ORGANIZER_NUMBER`/`BANK_TRANSFER_*` `.env` values only bootstrap the

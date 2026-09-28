@@ -12,6 +12,13 @@ fi
 php artisan package:discover --ansi
 php artisan filament:upgrade
 
+# storage/app is expected to be a persistent volume in production (uploads:
+# proof-of-payment files, event hero images) — without one, every redeploy
+# ships a fresh image and silently deletes them. A freshly-mounted volume is
+# empty and root-owned, so recreate the disk roots and hand them to php-fpm.
+mkdir -p storage/app/private storage/app/public
+chown -R www-data:www-data storage/app
+
 php artisan storage:link || true
 
 php artisan migrate --force
