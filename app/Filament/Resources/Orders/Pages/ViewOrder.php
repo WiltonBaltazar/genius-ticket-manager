@@ -5,11 +5,13 @@ namespace App\Filament\Resources\Orders\Pages;
 use App\Actions\Orders\ConfirmOrderPaymentAction;
 use App\Actions\Orders\DeleteOrderAction;
 use App\Actions\Orders\RefundOrderAction;
+use App\Actions\Orders\ResendOrderTicketsAction;
 use App\Enums\OrderStatus;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -21,7 +23,8 @@ class ViewOrder extends ViewRecord
     // (FR-016; no edit route exists for this resource) — ConfirmPayment,
     // Refund (004-attendee-checkout), and Delete (OrderPolicy::delete(),
     // super_admin only) are the narrow, distinct actions this resource
-    // exposes, not a general edit capability.
+    // exposes, not a general edit capability. ResendTickets only re-sends
+    // an email and changes no order state.
     protected function getHeaderActions(): array
     {
         return [
@@ -52,6 +55,29 @@ class ViewOrder extends ViewRecord
                         ->send();
 
                     $this->redirect(static::getResource()::getUrl('view', ['record' => $this->record]));
+                }),
+
+            Action::make('resendTickets')
+                ->label('Resend Tickets')
+                ->color('gray')
+                ->requiresConfirmation()
+                ->modalDescription(fn () => "Re-sends the tickets email to {$this->record->attendee->email}.")
+                ->schema([
+                    TextInput::make('email')
+                        ->label('Send to a different email (optional)')
+                        ->email()
+                        ->placeholder(fn () => $this->record->attendee->email)
+                        ->helperText("Use this if the attendee's email was mistyped. The email on the order is not changed."),
+                ])
+                ->visible(fn () => $this->record->status === OrderStatus::Paid
+                    && auth('staff')->user()?->can('resendTickets', $this->record))
+                ->action(function (array $data, ResendOrderTicketsAction $resendOrderTicketsAction) {
+                    $recipient = $resendOrderTicketsAction->handle($this->record, auth('staff')->user(), $data['email'] ?? null);
+
+                    Notification::make()
+                        ->title("Tickets resent to {$recipient}")
+                        ->success()
+                        ->send();
                 }),
 
             Action::make('refund')

@@ -47,7 +47,9 @@ class OrderConfirmed extends Notification implements ShouldQueue
                 'introLine' => 'Pagamento confirmado — os seus bilhetes estão prontos abaixo.',
                 'ctaLabel' => 'Ver e descarregar os bilhetes',
                 'helperLine' => 'Guarde este e-mail — é assim que volta a aceder aos seus bilhetes.',
-                'attendeeName' => $notifiable->name,
+                // From the order, not $notifiable — ResendOrderTicketsAction can
+                // route this to a bare email address, which has no name.
+                'attendeeName' => $this->order->attendee->name,
                 'items' => $this->order->orderItems,
                 'totalAmount' => $this->order->total_amount,
                 'expiresAt' => null,
