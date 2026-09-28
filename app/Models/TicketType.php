@@ -57,6 +57,28 @@ class TicketType extends Model
         return $query->where('available_quantity', '>', 0);
     }
 
+    /**
+     * Inside its own sales window — each ticket type's window is independent,
+     * so Early Bird ending never takes the event's other types off sale.
+     * A null bound means open-ended on that side.
+     */
+    public function scopeOnSale($query)
+    {
+        return $query
+            ->where(function ($query) {
+                $query->whereNull('sales_start_date')->orWhere('sales_start_date', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('sales_end_date')->orWhere('sales_end_date', '>=', now());
+            });
+    }
+
+    public function isOnSale(): bool
+    {
+        return ($this->sales_start_date === null || $this->sales_start_date->lte(now()))
+            && ($this->sales_end_date === null || $this->sales_end_date->gte(now()));
+    }
+
     protected static function booted(): void
     {
         // Auto-increment the optimistic-locking token on every update, the same way

@@ -52,6 +52,16 @@ class OrderPolicy
         return $this->hasOrdersAccess($staff);
     }
 
+    /**
+     * Re-send the "tickets ready" email on a paid order, via
+     * ResendOrderTicketsAction. Same orders-access bucket as confirmPayment —
+     * whoever can confirm the payment can resend what it produced.
+     */
+    public function resendTickets(Staff $staff, Order $order): bool
+    {
+        return $this->hasOrdersAccess($staff);
+    }
+
     public function delete(Staff $staff, Order $order): bool
     {
         return $staff->role === StaffRole::SuperAdmin;

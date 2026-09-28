@@ -99,12 +99,6 @@ class EventCheckoutController extends Controller
 
     private function onSaleTicketTypes(Event $event): HasMany
     {
-        return $event->ticketTypes()
-            ->where(function ($query) {
-                $query->whereNull('sales_start_date')->orWhere('sales_start_date', '<=', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('sales_end_date')->orWhere('sales_end_date', '>=', now());
-            });
+        return $event->ticketTypes()->onSale();
     }
 }

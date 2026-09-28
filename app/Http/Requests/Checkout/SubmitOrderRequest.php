@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Checkout;
 
 use App\Models\Event;
+use App\Models\TicketType;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -58,7 +59,22 @@ class SubmitOrderRequest extends FormRequest
             $firstDay = $event->start_date->toDateString();
             $lastDay = $event->end_date->toDateString();
 
+            // The landing page already hides ticket types outside their sales window,
+            // but a checkout page left open past sales_end_date (or a direct POST)
+            // would otherwise still buy one — e.g. Early Bird pricing after it ended.
+            $ticketTypes = TicketType::whereIn('id', array_column($this->input('items', []), 'ticket_type_id'))
+                ->get()
+                ->keyBy('id');
+
             foreach ($this->input('items', []) as $index => $item) {
+                $ticketType = $ticketTypes->get($item['ticket_type_id'] ?? null);
+                if ($ticketType && ! $ticketType->isOnSale()) {
+                    $validator->errors()->add(
+                        "items.{$index}.ticket_type_id",
+                        "Os bilhetes {$ticketType->name} já não estão à venda."
+                    );
+                }
+
                 $eventDate = $item['event_date'] ?? null;
                 if ($eventDate === null) {
                     continue;
