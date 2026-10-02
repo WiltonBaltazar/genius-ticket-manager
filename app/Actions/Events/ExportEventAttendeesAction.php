@@ -31,6 +31,13 @@ class ExportEventAttendeesAction
             ->whereHas('ticketType', fn ($query) => $query->where('event_id', $event->id))
             ->with(['ticketType', 'orderItem.order.attendee'])
             ->get()
+            // Oldest purchase first; tickets within the same order keep their issue order.
+            ->sortBy([
+                fn (Ticket $a, Ticket $b) => $a->orderItem->order->created_at <=> $b->orderItem->order->created_at,
+                fn (Ticket $a, Ticket $b) => $a->created_at <=> $b->created_at,
+                fn (Ticket $a, Ticket $b) => $a->getKey() <=> $b->getKey(),
+            ])
+            ->values()
             ->map(fn (Ticket $ticket) => [
                 'Name' => $ticket->currentHolderName(),
                 'Email' => $ticket->currentHolderEmail(),

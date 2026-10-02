@@ -73,3 +73,22 @@ it('returns an empty collection for an event with no tickets', function () {
 
     expect($rows)->toHaveCount(0);
 });
+
+it('lists attendees by purchase date, oldest first', function () {
+    $event = Event::factory()->create();
+    [$newer] = paidTicketFor($event);
+    [$older] = paidTicketFor($event);
+    [$middle] = paidTicketFor($event);
+
+    $older->forceFill(['created_at' => now()->subDays(3)])->save();
+    $middle->forceFill(['created_at' => now()->subDays(2)])->save();
+    $newer->forceFill(['created_at' => now()->subDay()])->save();
+
+    $rows = app(ExportEventAttendeesAction::class)->handle($event);
+
+    expect($rows->pluck('Order Reference')->all())->toBe([
+        strtoupper(substr($older->id, 0, 8)),
+        strtoupper(substr($middle->id, 0, 8)),
+        strtoupper(substr($newer->id, 0, 8)),
+    ]);
+});
