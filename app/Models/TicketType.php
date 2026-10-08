@@ -79,6 +79,25 @@ class TicketType extends Model
             && ($this->sales_end_date === null || $this->sales_end_date->gte(now()));
     }
 
+    /**
+     * A lot has gone live once its sales window has opened — a null start
+     * means it was on sale from creation. Before that, staff may still resize
+     * it in either direction.
+     */
+    public function hasGoneLive(): bool
+    {
+        return $this->sales_start_date === null || $this->sales_start_date->lte(now());
+    }
+
+    /**
+     * Seats taken out of the sellable pool (paid or still-pending orders),
+     * i.e. the floor total_quantity can never be lowered below.
+     */
+    public function takenQuantity(): int
+    {
+        return $this->total_quantity - $this->available_quantity;
+    }
+
     protected static function booted(): void
     {
         // Auto-increment the optimistic-locking token on every update, the same way

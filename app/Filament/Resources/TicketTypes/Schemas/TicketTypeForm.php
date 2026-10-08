@@ -34,13 +34,19 @@ class TicketTypeForm
                 TextInput::make('total_quantity')
                     ->numeric()
                     ->integer()
-                    ->minValue(0)
+                    ->minValue(fn (?TicketType $record) => $record?->takenQuantity() ?? 0)
                     ->required()
+                    ->helperText(fn (?TicketType $record) => $record && ! $record->hasGoneLive()
+                        ? 'This lot is not on sale yet — you can still increase or decrease it.'
+                        : null)
                     // Re-evaluated by Filament against the record's current (Livewire-
                     // rehydrated, i.e. fresh-from-DB) state on every request, including
                     // the save request itself — this is what closes the FR-013 race, not
-                    // just a one-time check at initial page load.
-                    ->disabled(fn (?TicketType $record) => $record && $record->available_quantity < $record->total_quantity),
+                    // just a one-time check at initial page load. A lot that hasn't gone
+                    // live yet stays resizable; EditTicketType keeps it above seats taken.
+                    ->disabled(fn (?TicketType $record) => $record
+                        && $record->hasGoneLive()
+                        && $record->available_quantity < $record->total_quantity),
                 TextInput::make('available_quantity')
                     ->label('Available Quantity')
                     ->numeric()
