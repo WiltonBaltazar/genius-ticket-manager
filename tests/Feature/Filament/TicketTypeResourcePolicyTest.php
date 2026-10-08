@@ -59,7 +59,71 @@ it('keeps total_quantity editable while no tickets have sold', function () {
         ->call('save')
         ->assertHasNoFormErrors();
 
-    expect($ticketType->fresh()->total_quantity)->toBe(75);
+    expect($ticketType->fresh())
+        ->total_quantity->toBe(75)
+        ->available_quantity->toBe(75);
+});
+
+it('lets event_manager increase or decrease a lot that has not gone live, keeping taken seats taken', function () {
+    $ticketType = TicketType::factory()->create([
+        'total_quantity' => 50,
+        'available_quantity' => 45,
+        'sales_start_date' => now()->addWeek(),
+        'sales_end_date' => now()->addMonth(),
+    ]);
+    $staff = Staff::factory()->eventManager()->create();
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(EditTicketType::class, ['record' => $ticketType->getKey()])
+        ->fillForm(['total_quantity' => 80])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($ticketType->fresh())->total_quantity->toBe(80)->available_quantity->toBe(75);
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(EditTicketType::class, ['record' => $ticketType->getKey()])
+        ->fillForm(['total_quantity' => 20])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($ticketType->fresh())->total_quantity->toBe(20)->available_quantity->toBe(15);
+});
+
+it('refuses to shrink a not-yet-live lot below the seats already taken', function () {
+    $ticketType = TicketType::factory()->create([
+        'total_quantity' => 50,
+        'available_quantity' => 45,
+        'sales_start_date' => now()->addWeek(),
+        'sales_end_date' => now()->addMonth(),
+    ]);
+    $staff = Staff::factory()->eventManager()->create();
+
+    Livewire::actingAs($staff, 'staff')
+        ->test(EditTicketType::class, ['record' => $ticketType->getKey()])
+        ->fillForm(['total_quantity' => 3])
+        ->call('save')
+        ->assertHasFormErrors(['total_quantity']);
+
+    expect($ticketType->fresh())->total_quantity->toBe(50)->available_quantity->toBe(45);
+});
+
+it('counts seats taken after the form loads when resizing a not-yet-live lot', function () {
+    $ticketType = TicketType::factory()->create([
+        'total_quantity' => 50,
+        'available_quantity' => 50,
+        'sales_start_date' => now()->addWeek(),
+        'sales_end_date' => now()->addMonth(),
+    ]);
+    $staff = Staff::factory()->eventManager()->create();
+
+    $component = Livewire::actingAs($staff, 'staff')->test(EditTicketType::class, ['record' => $ticketType->getKey()]);
+
+    $ticketType->update(['available_quantity' => 48]);
+
+    $component->fillForm(['total_quantity' => 60])->call('save')->assertHasNoFormErrors();
+
+    expect($ticketType->fresh())->total_quantity->toBe(60)->available_quantity->toBe(58);
 });
 
 it('locks total_quantity as read-only once any ticket has sold', function () {
