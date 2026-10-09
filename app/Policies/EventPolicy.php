@@ -43,6 +43,15 @@ class EventPolicy
         return $this->hasEventsAccess($staff);
     }
 
+    /**
+     * The sales/attendance report is revenue-level organizer data — same
+     * role set as exportAttendees.
+     */
+    public function downloadReport(Staff $staff, Event $event): bool
+    {
+        return $this->hasEventsAccess($staff);
+    }
+
     private function hasEventsAccess(Staff $staff): bool
     {
         return in_array($staff->role, [StaffRole::SuperAdmin, StaffRole::EventManager], true);
