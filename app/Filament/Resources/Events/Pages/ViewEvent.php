@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Events\Pages;
 
+use App\Actions\Events\BuildEventReportAction;
 use App\Actions\Events\ExportEventAttendeesAction;
 use App\Filament\Resources\Events\EventResource;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -40,6 +42,20 @@ class ViewEvent extends ViewRecord
 
                         $writer->close();
                     }, $fileName, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']);
+                }),
+            Action::make('downloadReport')
+                ->label('Download Report')
+                ->visible(fn () => auth('staff')->user()?->can('downloadReport', $this->record))
+                ->action(function (BuildEventReportAction $buildEventReportAction) {
+                    $pdf = Pdf::loadView('reports.event', [
+                        'event' => $this->record,
+                        'generatedAt' => now(),
+                        'generatedBy' => auth('staff')->user()?->name,
+                        ...$buildEventReportAction->handle($this->record),
+                    ]);
+                    $fileName = "report-{$this->record->slug}-".now()->format('Y-m-d').'.pdf';
+
+                    return response()->streamDownload(fn () => print ($pdf->output()), $fileName, ['Content-Type' => 'application/pdf']);
                 }),
             EditAction::make(),
         ];
